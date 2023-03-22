@@ -13,9 +13,10 @@ CREATE TABLE IF NOT EXISTS PLAYER (
 ); 
 
 CREATE TABLE IF NOT EXISTS FRIENDSHIP (
-    player1_id INT PRIMARY KEY NOT NULL,
-    player2_id INT PRIMARY KEY NOT NULL,
+    player1_id INT NOT NULL,
+    player2_id INT NOT NULL,
 
+    PRIMARY KEY(player1_id,player2_id),
     FOREIGN KEY(player1_id) REFERENCES PLAYER (id),
     FOREIGN KEY(player2_id) REFERENCES PLAYER (id)
 );
@@ -26,20 +27,22 @@ CREATE TABLE IF NOT EXISTS CHAT (
 );
 
 CREATE TABLE IF NOT EXISTS CHAT_LOOKUP (
-    chat_id INT PRIMARY KEY NOT NULL,
-    player_id INT PRIMARY KEY NOT NULL,
+    chat_id INT  NOT NULL,
+    player_id INT NOT NULL,
 
+    PRIMARY KEY(chat_id,player_id),
     FOREIGN KEY(chat_id) REFERENCES CHAT (id),
     FOREIGN KEY(player_id) REFERENCES PLAYER (id)
 );
 
 CREATE TABLE IF NOT EXISTS MESSAGE (
-    n_order INT PRIMARY KEY NOT NULL,
-    chat_id INT PRIMARY KEY NOT NULL,
+    n_order INT NOT NULL,
+    chat_id INT NOT NULL,
     player_id INT NOT NULL,
     m_time TIMESTAMP NOT NULL,
     m_text VARCHAR(200) NOT NULL,
 
+    PRIMARY KEY(n_order,chat_id),
     FOREIGN KEY(chat_id) REFERENCES CHAT (id),
     FOREIGN KEY(player_id) REFERENCES PLAYER (id)
 );
@@ -47,31 +50,33 @@ CREATE TABLE IF NOT EXISTS MESSAGE (
 CREATE TABLE IF NOT EXISTS GAME (
     id VARCHAR(10) PRIMARY KEY NOT NULL,
     g_name VARCHAR(20) UNIQUE NOT NULL,
-    url VARCHAR(20) CHECK ( url LIKE 'https://%' )
+    url VARCHAR(100) CHECK ( url LIKE 'https://%' )
 );
 
 CREATE TABLE IF NOT EXISTS PURCHASE (
-    player_id INT PRIMARY KEY NOT NULL,
-    game_id VARCHAR(10) PRIMARY KEY NOT NULL,
+    player_id INT NOT NULL,
+    game_id VARCHAR(10) NOT NULL,
     p_date TIMESTAMP NOT NULL,
     price INT NOT NULL,
 
+    PRIMARY KEY(player_id,game_id),
     FOREIGN KEY(player_id) REFERENCES PLAYER (id),
     FOREIGN KEY(game_id) REFERENCES GAME (id)
 );
 
 CREATE TABLE IF NOT EXISTS MATCH (
-    number INT PRIMARY KEY NOT NULL,
-    game_id VARCHAR(10) PRIMARY KEY NOT NULL,
+    number INT NOT NULL,
+    game_id VARCHAR(10) NOT NULL,
     dt_start TIMESTAMP NOT NULL,
     dt_end TIMESTAMP NOT NULL CHECK ( dt_end > dt_start ),
 
+    PRIMARY KEY(number,game_id),
     FOREIGN KEY(game_id) REFERENCES GAME (id)
 );
 
 CREATE TABLE IF NOT EXISTS MATCH_NORMAL (
     match_number INT PRIMARY KEY NOT NULL,
-    difficulty_level INT NOT NULL CHECK ( difficulty_level >= 1 && difficulty_level <= 5 )
+    difficulty_level INT NOT NULL CHECK ( difficulty_level >= 1 and difficulty_level <= 5 )
 );
 
 CREATE TABLE IF NOT EXISTS MATCH_MULTIPLAYER (
@@ -80,21 +85,25 @@ CREATE TABLE IF NOT EXISTS MATCH_MULTIPLAYER (
 );
 
 CREATE TABLE IF NOT EXISTS PLAYER_SCORE (
-    player_id INT PRIMARY KEY NOT NULL,
-    match_number INT PRIMARY KEY NOT NULL,
+    player_id INT NOT NULL,
+    match_number INT NOT NULL,
+    game_id VARCHAR(10) NOT NULL,--verificar se e mesmo necessario!!!!!
     score INT NOT NULL,
 
+    PRIMARY KEY(player_id, match_number,game_id),
     FOREIGN KEY(player_id) REFERENCES PLAYER (id),
-    FOREIGN KEY(match_number) REFERENCES MATCH (number)
+    FOREIGN KEY(match_number, game_id) REFERENCES MATCH (number, game_id)
+
 );
 
 CREATE TABLE IF NOT EXISTS BADGE (
-    b_name VARCHAR(20) PRIMARY KEY NOT NULL,
-    game_id VARCHAR(10) PRIMARY KEY NOT NULL, -- garante que o nome do crachá é distinto para cada jogo
+    b_name VARCHAR(20) NOT NULL,
+    game_id VARCHAR(10) NOT NULL, -- garante que o nome do crachá é distinto para cada jogo
     player_id INT NOT NULL,
     points_limit INT,
-    url VARCHAR(20) CHECK ( url LIKE 'https://%' ),
+    url VARCHAR(100) CHECK ( url LIKE 'https://%' ),
 
+    PRIMARY KEY(b_name,game_id),
     FOREIGN KEY(game_id) REFERENCES GAME (id),
     FOREIGN KEY(player_id) REFERENCES PLAYER (id)
 );

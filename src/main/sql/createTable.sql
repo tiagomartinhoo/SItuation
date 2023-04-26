@@ -78,20 +78,20 @@ begin
     );
 
     CREATE TABLE IF NOT EXISTS MATCH_NORMAL (
-        match_number INT PRIMARY KEY NOT NULL,
+        match_number INT NOT NULL,
         game_id VARCHAR(10) NOT NULL, 
-        difficulty_level INT NOT NULL CHECK ( difficulty_level >= 1 and difficulty_level <= 5 )
+        difficulty_level INT NOT NULL CHECK ( difficulty_level >= 1 and difficulty_level <= 5 ),
 
-        PRIMARY KEY(match_number, game_id)
+        PRIMARY KEY(match_number, game_id),
         FOREIGN KEY(match_number, game_id) REFERENCES MATCH(number, game_id)
     );
 
     CREATE TABLE IF NOT EXISTS MATCH_MULTIPLAYER (
-        match_number INT PRIMARY KEY NOT NULL,
+        match_number INT NOT NULL,
         game_id VARCHAR(10) NOT NULL,
-        state VARCHAR(20) CHECK ( state IN ('To start', 'Waiting for players', 'Ongoing', 'Finished') )
+        state VARCHAR(20) CHECK ( state IN ('To start', 'Waiting for players', 'Ongoing', 'Finished') ),
 
-        PRIMARY KEY(match_number, game_id)
+        PRIMARY KEY(match_number, game_id),
         FOREIGN KEY(match_number, game_id) REFERENCES MATCH(number, game_id)
     );
 
@@ -107,15 +107,6 @@ begin
 
     );
 
-    -- TODO: badges precisa de um sitio para ser registado (ou seja que existe) e pelo menos uma lookup table para os jogadores que o obtêm
-    CREATE TABLE IF NOT EXISTS PLAYER_BADGE (
-        player_id INT NOT NULL,
-        b_name VARCHAR(20) NOT NULL,
-        game_id VARCHAR(10) NOT NULL,
-
-        PRIMARY KEY(player_id, b_name,game_id),
-        FOREIGN KEY(b_name, game_id) REFERENCES BADGE(b_name, game_id)
-    );
     CREATE TABLE IF NOT EXISTS BADGE (
         b_name VARCHAR(20) NOT NULL,
         game_id VARCHAR(10) NOT NULL, -- garante que o nome do crachá é distinto para cada jogo
@@ -123,7 +114,16 @@ begin
         url VARCHAR(100) CHECK ( url LIKE 'https://%' ),
 
         PRIMARY KEY(b_name,game_id),
-        FOREIGN KEY(game_id) REFERENCES GAME (id),
+        FOREIGN KEY(game_id) REFERENCES GAME (id)
+    );
+	
+	CREATE TABLE IF NOT EXISTS PLAYER_BADGE (
+        player_id INT NOT NULL,
+        b_name VARCHAR(20) NOT NULL,
+        game_id VARCHAR(10) NOT NULL,
+
+        PRIMARY KEY(player_id, b_name,game_id),
+        FOREIGN KEY(b_name, game_id) REFERENCES BADGE(b_name, game_id),
         FOREIGN KEY(player_id) REFERENCES PLAYER (id)
     );
 

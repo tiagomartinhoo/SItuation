@@ -46,12 +46,12 @@ begin
         (2,'bbbbbbbbb1','2023-01-25 04:06:10','2023-01-26 04:06:10')
     ;
 
-    insert into match_normal(match_number, difficulty_level)
-        VALUES(1,3)
+    insert into match_normal(match_number, game_id, difficulty_level)
+        VALUES(1, 'abcdefghi8', 3)
     ;
 
-    insert into match_multiplayer(match_number, state)
-        VALUES(2,'Finished')
+    insert into match_multiplayer(match_number, game_id, state)
+        VALUES(2, 'bbbbbbbbb1', 'Finished')
     ;
 
     insert into player_score(player_id, match_number, game_id, score)
@@ -60,11 +60,13 @@ begin
         (3,2,'bbbbbbbbb1',1)
     ;
 
-    insert into player_badge(player_id, b_name, game_id)
-        VALUES('Win-Streak','abcdefghi8', 1)
+    
+    insert into badge(b_name, game_id, points_limit, url)
+        VALUES('Win-Streak','abcdefghi8', 5, 'https://www.winStreak.com')
     ;
-    insert into badge(b_name, game_id, player_id, points_limit, url)
-        VALUES('Win-Streak','abcdefghi8',5,'https://www.winStreak.com')
+
+	insert into player_badge(player_id, b_name, game_id)
+        VALUES(1, 'Win-Streak','abcdefghi8')
     ;
 
     insert into statistic_player(player_id, matches_played, total_points, games_played)

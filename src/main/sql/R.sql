@@ -1,16 +1,17 @@
 -- ############################ EX e ################################
 
-create or replace function totalPontosJogador(user_id int, OUT points int) 
+create or replace function totalPontosJogador(user_id int, points OUT int)
 language plpgsql
 As
 $$
-
 begin
-  -- TODO: obter a soma da coluna score da tabela PLAYER_SCORE
-  
-  	return points;
-  
+	SELECT into points SUM(p.score) from PLAYER_SCORE as p where p.player_id = user_id;
 end;$$;
+
+-- Validação
+SELECT * from PLAYER_SCORE;
+
+SELECT totalPontosJogador(1);
 
 -- ############################ EX h ################################
 
@@ -18,7 +19,6 @@ create or replace procedure associarCrachá(user_id int, game_id int, badge text
 language plpgsql
 As
 $$
-
 begin
 	-- TODO
 end;$$;

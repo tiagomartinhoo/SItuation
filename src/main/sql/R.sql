@@ -11,12 +11,15 @@ end;$$;
 -- Validação
 SELECT * from PLAYER_SCORE;
 
+INSERT INTO player_score values(2,1, 'abcdefghi8', 2);
+
 SELECT totalPontosJogador(1);
 SELECT totalPontosJogador(2);
+SELECT totalPontosJogador(3);
 
 -- ############################ EX h ################################
 
-DROP procedure "associarcrachá"(integer,text,text);
+-- DROP procedure "associarcrachá"(integer,text,text);
 
 create or replace procedure associarCrachá(user_id int, game text, badge text)
 language plpgsql

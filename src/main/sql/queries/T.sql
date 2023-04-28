@@ -19,6 +19,29 @@ SELECT totalJogosJogador(2);
 
 -- ############################ EX i ################################
 
+CREATE OR REPLACE FUNCTION set_message_id() RETURNS TRIGGER
+	LANGUAGE plpgsql AS $$
+BEGIN
+	NEW.n_order = (
+		SELECT COALESCE(MAX(n_order), 0) + 1
+		FROM message
+		WHERE chat_id = NEW.chat_id
+	);
+	RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER set_message_id_trigger
+	BEFORE INSERT ON message
+	FOR EACH ROW
+	WHEN (NEW.n_order IS NULL)
+		EXECUTE FUNCTION set_message_id();
+
+-- TEST
+INSERT INTO message (chat_id, player_id, m_time, m_text)
+VALUES (1, 1, NOW(), 'bye');
+
+
 CREATE OR REPLACE PROCEDURE iniciarConversa (
 	IN p_id INT,
 	IN chat_name TEXT,
@@ -36,8 +59,8 @@ BEGIN
 
 	SELECT username INTO player_name FROM player WHERE id = p_id;
 
-	INSERT INTO message
-	VALUES (1, c_id, p_id, NOW(), CONCAT('The player ', player_name, ' starts the chat.'));
+	INSERT INTO message (chat_id, player_id, m_time, m_text)
+	VALUES (c_id, p_id, NOW(), CONCAT('The player ', player_name, ' starts the chat.'));
 END;
 $$;
 

@@ -11,7 +11,8 @@ begin
     insert into player(email,username,activity_state,region_name)
         VALUES('tiago@gmail.com','tiago','Active','Sintra'),
         ('gui@gmail.com','gui','Active','Vinhais'),
-        ('rafa@gmail.com','rafael','Active','Cascais')
+        ('rafa@gmail.com','rafael','Active','Cascais'),
+        ('player@gmail.com','player','Banned','Lisboa')
     ;
 
     insert into friendship(player1_id, player2_id)

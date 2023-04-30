@@ -51,18 +51,44 @@ CALL banirJogador(1);
 
 -- ############################ EX g ################################
 
-create or replace function pontosJogoPorJogador(game_id int) RETURNS TABLE(user_id int, points integer)
+create or replace function pontosJogoPorJogador(g_id varchar) RETURNS TABLE(user_id int, points integer)
 language plpgsql
 As
 $$
 Declare
-	-- Probably gonna need to declare somewhere to store user_id and auxiliary count
+    i record; --for the for loop
 begin
-	-- something something loop(...) return NEXT
-  
-  	return;
+
+    if g_id is not null then
+
+        if exists(SELECT id FROM game WHERE id = g_id) then
+            for i in (
+                SELECT p.player_id, SUM(p.score) FROM player_score AS p WHERE p.game_id = g_id GROUP BY p.player_id
+            )LOOP
+                    user_id := i.player_id;
+                    points := i.sum;
+                    RETURN NEXT;
+                end loop;
+        else
+            raise notice 'Game ID % does not exist in the game table', g_id;
+        end if;
+       /* BEGIN
+
+        EXCEPTION
+            WHEN no_data_found THEN
+                raise exception 'Game ID % does not exist in the game table', g_id;
+        END;*/
+    else
+        raise notice 'Game id is null';
+    end if;
   
 end;$$;
+
+
+SELECT * from pontosJogoPorJogador('abcdefghi8');--one player in game
+SELECT * from pontosJogoPorJogador('bbbbbbbbb1');-- multiple player in game
+SELECT * from pontosJogoPorJogador(null);-- returns null
+SELECT * from pontosJogoPorJogador('abscvggggg');-- returns exception/notice
 
 -- ############################ EX j ################################
 
@@ -72,5 +98,45 @@ As
 $$
 
 begin
-	-- TODO
+    --verify if the ids are null
+    --verify if the ids exist
+    --verify if the parameter user_id is already in the chat_lookup table
+    if c_id is not null then
+        if exists(SELECT c_id from chat where id = c_id) then
+            if user_id is not null then
+                if exists(SELECT user_id from player where id = user_id) then
+                    if exists(SELECT user_id from chat_lookup where player_id = user_id and chat_id = c_id) then
+                        raise notice 'Player ID % its already in the chat with the id %', user_id, c_id;
+                    else --if the player id isnt already in the table with the specific chat id in the parameter c_id insert
+                        insert into chat_lookup(chat_id, player_id)
+                        VALUES (c_id, user_id);
+                    end if;
+
+                else
+                    raise notice 'Player ID % does not exist in the player table', user_id;
+                end if;
+
+            else
+                raise notice 'Player id is null';
+            end if;
+        else
+            raise notice 'Chat ID % does not exist in the chat table', c_id;
+        end if;
+
+    else
+        raise notice 'Chat id is null';
+    end if;
+
 end;$$;
+
+insert into chat_lookup(chat_id, player_id)
+VALUES (1,1),
+       (1,2);
+
+CALL juntarConversa(3,1);
+CALL juntarConversa(3,2);
+CALL juntarConversa(3,null);
+CALL juntarConversa(null,1);
+CALL juntarConversa(3,3);--chat id does not exist
+CALL juntarConversa(7,1);-- player id does not exist
+CALL juntarConversa(3,1);-- player already in chat

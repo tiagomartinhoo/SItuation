@@ -90,3 +90,24 @@ INSERT INTO chat_lookup VALUES (2,1);
 CALL enviarMensagem(1, 2, 'test message');
 
 SELECT * FROM message WHERE message.chat_id = 2; 
+
+
+-- ############################ EX n ################################
+
+CREATE OR REPLACE FUNCTION delete_totalPlayerInfo() RETURNS TRIGGER AS $$
+    BEGIN
+        --
+        -- Perform the required operation on emp, and create a row in emp_audit
+        -- to reflect the change made to emp.
+        --
+        IF (TG_OP = 'DELETE') THEN
+            CALL banirJogador(OLD.id);
+        ELSE
+			raise notice 'Trigger ran on an operation % instead of delete', TG_OP;
+        END IF;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER banUserOnTotalInfoDel
+INSTEAD OF DELETE ON jogadorTotalInfo
+    FOR EACH ROW EXECUTE FUNCTION delete_totalPlayerInfo();

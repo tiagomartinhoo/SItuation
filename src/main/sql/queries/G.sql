@@ -144,7 +144,7 @@ CALL juntarConversa(3,1);-- player already in chat
 
 -- ############################ EX m ################################
 
-CREATE OR REPLACE TRIGGER EX_M
+CREATE TRIGGER EX_M
     AFTER UPDATE OF state ON match_multiplayer
     FOR EACH ROW
     when (NEW.state = 'Finished' AND OLD.state = 'Ongoing')

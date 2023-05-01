@@ -63,7 +63,8 @@ begin
 
     
     insert into badge(b_name, game_id, points_limit, url)
-        VALUES('Win-Streak','abcdefghi8', 5, 'https://www.winStreak.com')
+        VALUES('Win-Streak','abcdefghi8', 5, 'https://www.winStreak.com'),
+        ('Win-Streak','bbbbbbbbb1', 5, 'https://www.winStreak.com')
     ;
 
 	insert into player_badge(player_id, b_name, game_id)

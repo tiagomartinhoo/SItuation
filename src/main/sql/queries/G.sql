@@ -140,3 +140,39 @@ CALL juntarConversa(null,1);
 CALL juntarConversa(3,3);--chat id does not exist
 CALL juntarConversa(7,1);-- player id does not exist
 CALL juntarConversa(3,1);-- player already in chat
+
+
+-- ############################ EX m ################################
+
+CREATE OR REPLACE TRIGGER EX_M
+    AFTER UPDATE OF state ON match_multiplayer
+    FOR EACH ROW
+    when (NEW.state = 'Finished' AND OLD.state = 'Ongoing')
+    EXECUTE FUNCTION  trigger_exM();
+
+CREATE OR REPLACE FUNCTION trigger_exM() RETURNS TRIGGER
+LANGUAGE plpgsql
+AS
+$$
+DECLARE
+        player record;
+BEGIN
+    IF NEW.state = 'Finished' THEN
+        -- call the associarCrachá procedure for each player in the match
+        FOR player IN (SELECT player_id
+                       FROM PLAYER_SCORE
+                       WHERE match_number = NEW.match_number AND game_id = NEW.game_id)
+            LOOP
+                CALL associarCrachá(player.player_id, NEW.game_id, 'Win-Streak');
+            END LOOP;
+    END IF;
+    RETURN NULL;
+END;$$;
+
+insert into match_multiplayer(match_number, game_id, state)
+VALUES(2, 'bbbbbbbbb1', 'Ongoing')
+;
+
+-- working when theplayer dont have enough points for a badge
+-- error when a player has enough points
+UPDATE match_multiplayer SET state = 'Finished' where match_number = 2 and game_id = 'bbbbbbbbb1';

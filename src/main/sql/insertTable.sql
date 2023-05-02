@@ -25,6 +25,13 @@ begin
         VALUES ('tomas'),
         ('yeye')
     ;
+	
+	insert into chat_lookup(chat_id, player_id)
+		VALUES(1, 1),
+		(1,2),
+		(2,3),
+		(2,4)
+	;
 
     insert into message(n_order, chat_id, player_id, m_time, m_text)
         VALUES(1,1,1,'2023-02-5 04:05:06','hello'),

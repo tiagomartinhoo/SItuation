@@ -76,8 +76,8 @@ begin
 		raise notice 'User does not have permission to chat in this chat';
 		return;
 	END IF;
-	-- TODO: Handle n_order parameter?
-	INSERT INTO message Values(c_id, user_id, now(), msg);
+	
+	INSERT INTO message(chat_id, player_id, m_time, m_text) Values(c_id, user_id, now(), msg);
 end;$$;
 
 -- Validação
@@ -179,6 +179,60 @@ begin
 	else
 		raise notice 'teste %: Resultado FAIL', test_name;
 		raise notice '1:%, 2:%, 3:%',user1_p, user2_p, user3_p;
+	end if;
+	
+	exception
+		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+-- ############################ EX k ################################
+
+DO
+$$
+DECLARE
+	test_name text:= 'enviarMensagem valid message';
+	code char(5) default '00000';
+	msg text;
+	res record;
+begin
+	call enviarMensagem(1, 1, 'TestMessage');
+	
+	select * from message where chat_id=1 order by n_order DESC limit 1 into res;
+	
+	if res.player_id = 1 and res.m_text = 'TestMessage' then
+		raise notice 'teste %: Resultado OK', test_name;
+	else
+		raise notice 'teste %: Resultado FAIL', test_name;
+	end if;
+	
+	exception
+		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+DO
+$$
+DECLARE
+	test_name text:= 'enviarMensagem user without permissions';
+	code char(5) default '00000';
+	msg text;
+	res record;
+begin
+	call enviarMensagem(1, 2, 'TestMessage');
+	
+	select * from message where chat_id=2 and player_id=1 into res;
+	
+	if res IS NULL then
+		raise notice 'teste %: Resultado OK', test_name;
+	else
+		raise notice 'teste %: Resultado FAIL', test_name;
 	end if;
 	
 	exception

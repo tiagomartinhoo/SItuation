@@ -223,8 +223,9 @@ begin
 		raise notice 'User does not have permission to chat in this chat';
 		return;
 	END IF;
-	-- TODO: Handle n_order parameter?
-	INSERT INTO message Values(1, c_id, user_id, now(), msg);
+	
+	INSERT INTO message(chat_id, player_id, m_time, m_text) 
+		Values(c_id, user_id, now(), msg);
 end;$$;
 
 -- ############################ EX l ################################

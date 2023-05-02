@@ -189,6 +189,84 @@ begin
 			raise notice 'An exception did not get handled: code=%:%', code, msg;
 end;$$;
 
+-- ############################ EX h ################################
+
+DO
+$$
+DECLARE
+	test_name text:= 'associarCrachá quando utilizador não tem pontos suficientes';
+	code char(5) default '00000';
+	msg text;
+begin
+	CALL associarCrachá(1, 'abcdefghi8','Win-Streak');
+	-- Não se espera que o user tenha sido associado porque não tem pontos suficientes
+	
+	PERFORM * FROM PLAYER_BADGE where player_id = 1 and b_name = 'Win-Streak' and game_id = 'abcdefghi8';
+	
+	if not found then
+		raise notice 'teste %: Resultado OK', test_name;
+	else
+		raise notice 'teste %: Resultado FAIL', test_name;
+	end if;
+	
+	exception
+		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+DO
+$$
+DECLARE
+	test_name text:= 'associarCrachá quando utilizador tem pontos suficientes';
+	code char(5) default '00000';
+	msg text;
+	res record;
+begin
+
+	CALL associarCrachá(1, 'abcdefghi8','test');
+
+	PERFORM * FROM PLAYER_BADGE where player_id = 1 and b_name = 'test' and game_id = 'abcdefghi8';
+	
+	if not found then
+		raise notice 'teste %: Resultado FAIL', test_name;
+	else
+		raise notice 'teste %: Resultado OK', test_name;
+	end if;
+	
+	exception
+		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+DO
+$$
+DECLARE
+	test_name text:= 'associarCrachá de user/game/nome nulls';
+	code char(5) default '00000';
+	msg text;
+	res record;
+begin
+
+	CALL associarCrachá(null, null, null);
+
+	-- nothing CAN happen, therefore we test the throwing of unhandled exceptions
+	raise notice 'teste %: Resultado OK', test_name;
+	
+	exception
+		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+
 -- ############################ EX k ################################
 
 DO
@@ -201,6 +279,7 @@ DECLARE
 begin
 	call enviarMensagem(1, 1, 'TestMessage');
 	
+	-- Obtain last message sent to chat 1, which should be the test message sent by user 1
 	select * from message where chat_id=1 order by n_order DESC limit 1 into res;
 	
 	if res.player_id = 1 and res.m_text = 'TestMessage' then
@@ -237,6 +316,165 @@ begin
 	
 	exception
 		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+DO
+$$
+DECLARE
+	test_name text:= 'enviarMensagem invalid user';
+	code char(5) default '00000';
+	msg text;
+	res record;
+begin
+	call enviarMensagem(120, 2, 'TestMessage');
+	
+	select * from message where chat_id=2 and player_id=120 into res;
+	
+	if res IS NULL then
+		raise notice 'teste %: Resultado OK', test_name;
+	else
+		raise notice 'teste %: Resultado FAIL', test_name;
+	end if;
+	
+	exception
+		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+DO
+$$
+DECLARE
+	test_name text:= 'enviarMensagem invalid chat id';
+	code char(5) default '00000';
+	msg text;
+	res record;
+begin
+	call enviarMensagem(1, 152, 'TestMessage');
+	
+	select * from message where chat_id=152 and player_id=1 into res;
+	
+	if res IS NULL then
+		raise notice 'teste %: Resultado OK', test_name;
+	else
+		raise notice 'teste %: Resultado FAIL', test_name;
+	end if;
+	
+	exception
+		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+DO
+$$
+DECLARE
+	test_name text:= 'enviarMensagem user and chat null';
+	code char(5) default '00000';
+	msg text;
+	res record;
+begin
+	call enviarMensagem(null, null, 'TestMessage');
+	
+	-- In this case nothing CAN happen, therefore we test for exceptions not being treated
+	raise notice 'teste %: Resultado OK', test_name;
+	
+	exception
+		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+DO
+$$
+DECLARE
+	test_name text:= 'enviarMensagem absurdely big message';
+	code char(5) default '00000';
+	msg text;
+	res record;
+	test_msg text := 'TestMessage21412u56271765172651726215t682165621652815a6sd67861278461261845216541858652186186888asd2418217491824879481987421914978241987
+						TestMessage21412u56271765172651726215t682165621652815a6sd67861278461261845216541858652186186888asd2418217491824879481987421914978241987
+						TestMessage21412u56271765172651726215t682165621652815a6sd67861278461261845216541858652186186888asd2418217491824879481987421914978241987
+						TestMessage21412u56271765172651726215t682165621652815a6sd67861278461261845216541858652186186888asd2418217491824879481987421914978241987';
+begin
+	call enviarMensagem(1, 1, test_msg);
+	
+	-- Obtain last message, the message should not have been inserted
+	select * from message where chat_id=1 order by n_order DESC limit 1 into res;
+	
+	if res.m_text = test_msg then
+		raise notice 'teste %: Resultado FAIL', test_name;
+	else
+		raise notice 'teste %: Resultado OK', test_name;	
+	end if;
+	
+	exception
+		when others then
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+-- ############################ EX n ################################
+
+DO
+$$
+DECLARE
+	test_name text := 'delete existing user from jogadorTotalInfo ';
+	code char(5) default '00000';
+	msg text;
+	res record;
+	res2 record;
+begin
+	-- DELETE from view should result in user status being turned into banned and user disappearing from said view
+	DELETE FROM jogadorTotalInfo where email='rafa@gmail.com';
+	
+	SELECT * FROM player where email='rafa@gmail.com' into res;
+	
+	SELECT * FROM jogadorTotalInfo where email='rafa@gmail.com' into res2;
+	
+	if res.activity_state = 'Banned' and res2 IS NULL then
+		raise notice 'teste %: Resultado OK', test_name;
+	else
+		raise notice 'teste %: Resultado FAIL, res=%', test_name, res;
+	end if;
+	exception
+		when others then
+		
+		GET stacked DIAGNOSTICS
+		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
+			raise notice 'An exception did not get handled: code=%:%', code, msg;
+end;$$;
+
+DO
+$$
+DECLARE
+	test_name text := 'delete inexistent user from jogadorTotalInfo';
+	code char(5) default '00000';
+	msg text;
+
+begin
+	
+	DELETE FROM jogadorTotalInfo where email='abcd@gamil.com';
+	
+	-- Once again we only test for unhandled exceptions
+	raise notice 'teste %: Resultado OK', test_name;
+	
+	exception
+		when others then
+		
 		GET stacked DIAGNOSTICS
 		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
 			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;

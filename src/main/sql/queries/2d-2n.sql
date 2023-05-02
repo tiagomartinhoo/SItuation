@@ -224,6 +224,8 @@ begin
 		return;
 	END IF;
 	
+	-- TODO: handle values that are too big to insert (as msg is never checked until insert)
+
 	INSERT INTO message(chat_id, player_id, m_time, m_text) 
 		Values(c_id, user_id, now(), msg);
 end;$$;
@@ -284,6 +286,7 @@ CREATE OR REPLACE FUNCTION delete_totalPlayerInfo() RETURNS TRIGGER AS $$
         ELSE
 			raise notice 'Trigger ran on an operation % instead of delete', TG_OP;
         END IF;
+		RETURN NEW;
     END;
 $$ LANGUAGE plpgsql;
 

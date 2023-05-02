@@ -1,6 +1,8 @@
 DO
 $$
 begin
+	drop view if exists jogadortotalinfo;
+
     drop table if exists friendship;
 
     drop table if exists chat_lookup;

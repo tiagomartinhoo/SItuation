@@ -60,7 +60,7 @@ begin
         (2,2,'bbbbbbbbb1',0),
 		(2,1, 'abcdefghi8', 2),
 		(3,2,'bbbbbbbbb1',1),
-		(3,2,'abcdefghi8',4)
+		(3,1,'abcdefghi8',4)
     ;
 
     

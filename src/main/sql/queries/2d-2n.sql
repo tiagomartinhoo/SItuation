@@ -224,10 +224,13 @@ begin
 		return;
 	END IF;
 	
-	-- TODO: handle values that are too big to insert (as msg is never checked until insert)
 
 	INSERT INTO message(chat_id, player_id, m_time, m_text) 
 		Values(c_id, user_id, now(), msg);
+		
+exception 
+	when sqlstate '22001' then -- Handle messages being too big
+		raise notice 'Attempted to send a message that is too big';
 end;$$;
 
 -- ############################ EX l ################################

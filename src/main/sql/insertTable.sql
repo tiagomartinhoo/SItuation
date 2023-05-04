@@ -59,7 +59,7 @@ begin
     ;
 
     insert into match_multiplayer(match_number, game_id, state)
-        VALUES(2, 'bbbbbbbbb1', 'Finished')
+        VALUES(2, 'bbbbbbbbb1', 'Ongoing')
     ;
 
     insert into player_score(player_id, match_number, game_id, score)

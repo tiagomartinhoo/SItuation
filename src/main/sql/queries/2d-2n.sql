@@ -110,6 +110,13 @@ Declare
 	needed_points int DEFAULT -1;
 	user_points int DEFAULT -1;
 begin
+    -- Verify that the user does not already have the badge
+	PERFORM * from PLAYER_BADGE as t where t.player_id = user_id and game_id = game and b_name = badge;
+	if found then:
+		raise notice 'Player already has the badge';
+		return;
+	end if;
+
 	-- Obtain user points in the game
 	select into user_points SUM(p.score) from PLAYER_SCORE as p where p.player_id = user_id and (p.game_id = game);
 	-- Obtain needed points for the badge

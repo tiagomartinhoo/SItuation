@@ -1,5 +1,10 @@
 -- ############################ EX e ################################
 
+/*  Paté:
+Na alínea e foi criada a função totalPontosJogador que recebe um identificador de utilizador e retorna a pontuação total de todas as partidas jogadas pelo utilizador com o identificador pretendido. No caso de o utilizador não existir, o valor retornado é nulo.
+Para cumprir o objetivo, fazemos uso da tabela única onde guardamos as pontuações de cada partida, selecionamos as partidas do utilizador e fazemos uso da operação SUM para somar as pontuações das partidas encontradas.
+*/
+
 create or replace function totalPontosJogador(user_id int, points OUT int)
 language plpgsql
 As
@@ -19,6 +24,13 @@ end;$$;
 
 -- ############################ EX h ################################
 
+/* PATU:
+Na alínea h foi criado um procedimento cujo propósito é associar a um utilizador um devido crachá, se este tiver pontos suficientes para tal. O procedimento recebe então o utilizador, o id do jogo e o nome do crachá.
+Primeira consideração a ter neste processo é que se o utilizador já obteve este crachá, não se deve tentar re-atribuir o mesmo. Para tal faz-se uso da operação PERFORM de plpgsql para efetuar uma query sem se obter o valor de retorno. Query realizada à tabela PLAYER_BADGE que contém as atribuições de crachás a jogadores, procurando pelos 3 argumentos recebidos. Se o utilizador já tiver sido atribuido o crachá, então lança-se um aviso ao cliente e termina-se o processamento, caso contrário continuamos.
+Realizamos o mesmo processo da alinea e, selecionando em vez de apenas as partidas do utilizador, limitamos também às partidas realizadas no jogo pretendido, fazendo uso da operação SUM para obter a soma das pontuações. Uma vez conhecida a pontuação total do utilizador neste jogo, verifica-se se este tem de facto pontos suficientes. A pontuação necessária está associada ao crachá na tabela BADGE, no atributo "points_limit". Se o utilizador não tiver pontos suficientes lança-se um aviso ao cliente. Se o utilizador tiver pontos suficientes, insere-se na tabela PLAYER_BADGE o tuplo que sugere o mesmo.
+*/
+
+
 -- DROP procedure "associarcrachá"(integer,text,text);
 
 create or replace procedure associarCrachá(user_id int, game text, badge text)
@@ -29,6 +41,12 @@ Declare
 	needed_points int DEFAULT -1;
 	user_points int DEFAULT -1;
 begin
+	PERFORM * from PLAYER_BADGE as t where t.player_id = user_id and game_id = game and b_name = badge;
+	if found then:
+		raise notice 'Player already has the badge';
+		return;
+	end if;
+
 	-- Obtain user points in the game
 	select into user_points SUM(p.score) from PLAYER_SCORE as p where p.player_id = user_id and (p.game_id = game);
 	-- Obtain needed points for the badge
@@ -63,7 +81,11 @@ end;$$;
 
 
 -- ############################ EX k ################################
-
+/* Patata:
+Na alinea k foi criado o procedimento que permite o envio de uma mensagem para um chat, sendo esta representada por um tuplo na tabela MESSAGE. O procedimento recebe 3 parametros, o identificador do utilizador, o identificador da conversa e a mensagem que se pretende enviar.
+Começa-se por verificar que o utilizador está associado à conversa, usando o mecanismo PERFORM para fazer uma query à tabela CHAT_LOOKUP, procurando por um tuplo que contenha o id da conversa e do utilizador. Se este não for encontrado, avisa-se o servidor de que o utilizador não tem acesso à conversa e termina-se o processamento.
+Caso o utilizador tenha permissões, insere-se na tabela MESSAGE o tuplo que representa a mensagem atual vinda do utilizador e para a conversa que se pretende, adicionando a timestamp atual para o "quando" da mensagem ter sido enviada. Este procedimento não se preocupa em atribuir o valor da ordem da mensagem uma vez que um gatilho foi realizado para tratar deste assunto.
+*/
 create or replace procedure enviarMensagem(user_id int, c_id int, msg text)
 language plpgsql
 As
@@ -92,6 +114,13 @@ end;$$;
 -- SELECT * FROM message WHERE message.chat_id = 2; 
 
 -- ############################ EX n ################################
+
+/* Tou a ficar sem inspiração:
+Na alínea n pretende-se que a remoção de um tuplo de um utilizador sobre a vista 'jogadorTotalInfo' se equivale a banir o utilizador. 
+Para tal, foi criada uma função que retorna um gatilho e posteriormente definido o gatilho que em vez da remoção de um (ou mais) tuplo(s) sobre a vista.
+A função começa por verificar que a operação que ativou o trigger foi um delete e nesse caso faz uso do procedimento anteriormente definido na alínea d para banir o jogador com o identificador do utilizador do tuplo que se pretendia remover. Não é necessário retornar nada uma vez que banir o utilizador já resulta na remoção do tuplo da tabela.
+Caso o gatilho corra numa outra qualquer operação, este avisa o cliente e não faz qualquer processamento.
+*/
 
 CREATE OR REPLACE FUNCTION delete_totalPlayerInfo() RETURNS TRIGGER AS $$
     BEGIN

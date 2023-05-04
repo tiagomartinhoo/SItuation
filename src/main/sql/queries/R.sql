@@ -103,7 +103,7 @@ CREATE OR REPLACE FUNCTION delete_totalPlayerInfo() RETURNS TRIGGER AS $$
     END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER banUserOnTotalInfoDel
+CREATE OR REPLACE TRIGGER banUserOnTotalInfoDel
 INSTEAD OF DELETE ON jogadorTotalInfo
     FOR EACH ROW EXECUTE FUNCTION delete_totalPlayerInfo();
 

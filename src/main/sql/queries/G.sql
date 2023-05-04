@@ -126,10 +126,6 @@ begin
 
 end;$$;
 
-insert into chat_lookup(chat_id, player_id)
-VALUES (1,1),
-       (1,2);
-
 CALL juntarConversa(3,1);
 CALL juntarConversa(3,2);
 CALL juntarConversa(3,null);
@@ -140,12 +136,6 @@ CALL juntarConversa(3,1);-- player already in chat
 
 
 -- ############################ EX m ################################
-
-CREATE TRIGGER EX_M
-    AFTER UPDATE OF state ON match_multiplayer
-    FOR EACH ROW
-    when (NEW.state = 'Finished' AND OLD.state = 'Ongoing')
-    EXECUTE FUNCTION  trigger_exM();
 
 CREATE OR REPLACE FUNCTION trigger_exM() RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -165,6 +155,12 @@ BEGIN
     END IF;
     RETURN NULL;
 END;$$;
+
+CREATE OR REPLACE TRIGGER EX_M
+    AFTER UPDATE OF state ON match_multiplayer
+    FOR EACH ROW
+    when (NEW.state = 'Finished' AND OLD.state = 'Ongoing')
+EXECUTE FUNCTION  trigger_exM();
 
 -- working when theplayer dont have enough points for a badge
 UPDATE match_multiplayer SET state = 'Finished' where match_number = 2 and game_id = 'bbbbbbbbb1';

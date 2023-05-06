@@ -2,22 +2,22 @@
 
 DO
 $$
-    DECLARE
-        test_name text := 'criarJogador criar novo Player';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
+DECLARE
+	test_name text := 'criarJogador criar novo Player';
+	code char(5) default '00000';
+	msg text;
+	res record;
+begin
 
-        CALL criarJogador('test@gmail.com','test','Banned','Sintra');
+	CALL criarJogador('test@gmail.com','test','Banned','Sintra');
 
-        select * FROM PLAYER where email = 'test@gmail.com' into res;
+	select * FROM PLAYER where email = 'test@gmail.com' into res;
 
-        if res is null then
-            raise notice 'teste %: Resultado FAIL', test_name;
-        else
-            raise notice 'teste %: Resultado OK', test_name;
-        end if;
+	if res is null then
+		raise notice 'teste %: Resultado FAIL', test_name;
+	else
+		raise notice 'teste %: Resultado OK', test_name;
+	end if;
     exception
         when others then
 
@@ -25,7 +25,7 @@ $$
                 code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
             raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
             raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
+end;$$;
 
 
 DO
@@ -256,7 +256,7 @@ DECLARE
 BEGIN
 	SELECT totalJogosJogador(200) INTO res;
 
-	IF res IS NULL THEN
+	IF res = 0 THEN
 		RAISE NOTICE 'Test %: Result OK', test_name;
 	ELSE
 		RAISE NOTICE 'Test %: Result FAIL, res= %', test_name, res;
@@ -280,7 +280,7 @@ DECLARE
 BEGIN
 	SELECT totalJogosJogador(null) INTO res;
 
-	IF res IS NULL THEN
+	IF res = 0 THEN
 		RAISE NOTICE 'Test %: Result OK', test_name;
 	ELSE
 		RAISE NOTICE 'Test %: Result FAIL', test_name;
@@ -319,7 +319,7 @@ $$
                 code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
             raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
             raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
+end;$$;
 
 DO
 $$
@@ -336,19 +336,19 @@ $$
            points INTEGER
         );
 
-        INSERT INTO tmp_user_points(user_id, points) VALUES (2,5),
+        INSERT INTO tmp_user_points(user_id, points) VALUES	(2,0),
                                                             (3,1);
 
         -- to use both table in the loop
         for res in select p.user_id, p.points FROM pontosJogoPorJogador('bbbbbbbbb1') p
             LOOP
-                if (res.user_id, res.points) IN (SELECT user_id, points FROM tmp_user_points) then
-                    raise notice 'teste %: Resultado OK', test_name;
-                else
+                if (res.user_id, res.points) NOT IN (SELECT user_id, points FROM tmp_user_points) then
                     raise notice 'teste %: Resultado FAIL', test_name;
+					DROP TABLE tmp_user_points;
+					RETURN;
                 end if;
             end loop;
-
+		raise notice 'teste %: Resultado OK', test_name;
         -- drop temporary table
         DROP TABLE tmp_user_points;
     exception
@@ -358,7 +358,7 @@ $$
                 code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
             raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
             raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
+end;$$;
 
 
 DO
@@ -383,7 +383,7 @@ $$
                 code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
             raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
             raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
+end;$$;
 
 
 DO
@@ -408,7 +408,7 @@ $$
                 code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
             raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
             raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
+end;$$;
 
 
 -- ############################ EX h ################################
@@ -420,10 +420,10 @@ DECLARE
 	code char(5) default '00000';
 	msg text;
 begin
-	CALL associarCrachá(1, 'abcdefghi8','Win-Streak');
+	CALL associarCrachá(2, 'bbbbbbbbb1','Win-Streak');
 	-- Não se espera que o user tenha sido associado porque não tem pontos suficientes
 	
-	PERFORM * FROM PLAYER_BADGE where player_id = 1 and b_name = 'Win-Streak' and game_id = 'abcdefghi8';
+	PERFORM * FROM PLAYER_BADGE where player_id = 2 and b_name = 'Win-Streak' and game_id = 'abcdefghi8';
 	
 	if not found then
 		raise notice 'teste %: Resultado OK', test_name;
@@ -706,9 +706,9 @@ $$
         msg text;
         res record;
     begin
-        CALL juntarConversa(3,3);
+        CALL juntarConversa(3,3512);
 
-        SELECT * FROM chat_lookup where chat_id = 3 and player_id = 3 into res;
+        SELECT * FROM chat_lookup where chat_id = 3512 and player_id = 3 into res;
 
         if res is null then
             raise notice 'teste %: Resultado OK', test_name;

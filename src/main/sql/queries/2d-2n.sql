@@ -1,3 +1,27 @@
+-- Util functions
+CREATE OR REPLACE FUNCTION check_player_exists(p_id INT) RETURNS BOOL AS $$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM player WHERE id = p_id) THEN
+        RAISE NOTICE 'Player with ID % does not exist', p_id;
+        RETURN FALSE;
+    ELSE
+        RETURN TRUE;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION check_chat_name_is_empty(c_name TEXT) RETURNS BOOL AS $$
+BEGIN
+    IF length(c_name) = 0 THEN
+        RAISE NOTICE 'Name of the chat can not be empty';
+        RETURN TRUE;
+    ELSE
+        RETURN FALSE;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- ############################ EX d ################################
 
 CREATE OR REPLACE PROCEDURE criarJogador(
@@ -11,6 +35,7 @@ $$
 BEGIN
 	INSERT INTO player(email, username, activity_state, region_name)
 		VALUES(p_email, p_username, p_activity_state, p_region_name);
+	-- TODO Exception handling
 END;$$;
 
 CREATE OR REPLACE PROCEDURE mudarEstadoJogador(p_id INT, new_state TEXT)
@@ -21,7 +46,7 @@ BEGIN
 	UPDATE player SET activity_state = new_state WHERE id = p_id;
 END;$$;
 
-
+-- Nível de isolamento default (não necessita de ser definido explicitamente)
 CREATE OR REPLACE PROCEDURE desativarJogador(p_id INT)
 LANGUAGE plpgsql
 AS
@@ -30,6 +55,7 @@ BEGIN
 	CALL mudarEstadoJogador(p_id, 'Inactive');
 END;$$;
 
+-- Nível de isolamento default (não necessita de ser definido explicitamente)
 CREATE OR REPLACE PROCEDURE banirJogador(p_id INT)
 LANGUAGE plpgsql
 AS
@@ -40,6 +66,7 @@ END;$$;
 
 -- ############################ EX e ################################
 
+-- Nível de isolamento default (não necessita de ser definido explicitamente)
 create or replace function totalPontosJogador(user_id int, points OUT int)
 language plpgsql
 As
@@ -50,6 +77,7 @@ end;$$;
 	
 -- ############################ EX f ################################
 
+-- Nível de isolamento default (não necessita de ser definido explicitamente)
 CREATE OR REPLACE FUNCTION totalJogosJogador(p_id INT) RETURNS INT
 	LANGUAGE plpgsql AS $$
 DECLARE
@@ -85,22 +113,15 @@ begin
         else
             raise notice 'Game ID % does not exist in the game table', g_id;
         end if;
-       /* BEGIN
-
-        EXCEPTION
-            WHEN no_data_found THEN
-                raise exception 'Game ID % does not exist in the game table', g_id;
-        END;*/
+       
     else
         raise notice 'Game id is null';
     end if;
   
 end;$$;
 
-
 -- ############################ EX h ################################
 
--- DROP procedure "associarcrachá"(integer,text,text);
 
 create or replace procedure associarCrachá(user_id int, game text, badge text)
 language plpgsql
@@ -112,7 +133,7 @@ Declare
 begin
     -- Verify that the user does not already have the badge
 	PERFORM * from PLAYER_BADGE as t where t.player_id = user_id and game_id = game and b_name = badge;
-	if found then:
+	if found then
 		raise notice 'Player already has the badge';
 		return;
 	end if;
@@ -133,6 +154,18 @@ begin
 	END IF;
 end;$$;
 
+
+-- RR porque há a verificação dos pontos e de o utilizador não ter o crachá (não permitir double insert)
+create or replace procedure associarCracháIsol(user_id int, game text, badge text)
+language plpgsql
+As
+$$
+BEGIN
+	rollback;
+	SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+	CALL associarCrachá(user_id, game, badge);
+END;$$;
+
 -- ############################ EX i ################################
 
 CREATE OR REPLACE FUNCTION set_message_id() RETURNS TRIGGER
@@ -147,13 +180,16 @@ BEGIN
 END;
 $$;
 
-
 CREATE OR REPLACE TRIGGER set_message_id_trigger
 	BEFORE INSERT ON message
 	FOR EACH ROW
 	WHEN (NEW.n_order IS NULL)
 		EXECUTE FUNCTION set_message_id();
-		
+
+-- TEST
+INSERT INTO message (chat_id, player_id, m_time, m_text)
+VALUES (1, 1, NOW(), 'bye');
+
 
 CREATE OR REPLACE PROCEDURE iniciarConversa (
 	IN p_id INT,
@@ -165,15 +201,38 @@ AS $$
 DECLARE
 	player_name VARCHAR;
 BEGIN
+	-- Check if player exists
+	IF NOT check_player_exists(p_id) OR check_chat_name_is_empty(chat_name) THEN
+		RETURN;
+	END IF;
 
+	-- Insert a new chat and get its ID
 	INSERT INTO chat (c_name) VALUES (chat_name) RETURNING id INTO c_id;
 
+	-- Insert a lookup record to associate the player with the chat
 	INSERT INTO chat_lookup (chat_id, player_id) VALUES (c_id, p_id);
 
+	-- Get the player's username
 	SELECT username INTO player_name FROM player WHERE id = p_id;
 
+	-- Insert a message to indicate that the player started the chat
 	INSERT INTO message (chat_id, player_id, m_time, m_text)
 	VALUES (c_id, p_id, NOW(), CONCAT('The player ', player_name, ' starts the chat.'));
+END;
+$$;
+
+-- RR porque temos de garantir que as inserções e as validações continuam válidas até ao fim
+CREATE OR REPLACE PROCEDURE iniciarConversaIsol (
+	IN p_id INT,
+	IN chat_name TEXT,
+	OUT c_id INT
+)
+	LANGUAGE plpgsql
+AS $$
+BEGIN
+	rollback;
+	SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+	CALL iniciarConversa(p_id, chat_name, c_id);
 END;
 $$;
 
@@ -215,9 +274,18 @@ begin
     end if;
 
 end;$$;
-
+-- RR porque se verificamos que o utilizador tem permissões, continua a precisar de as ter ao inserir mensagem
+create or replace procedure juntarConversaIsol(user_id int, c_id int)
+language plpgsql
+As
+$$
+begin
+	rollback;
+	SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+	call juntarConversa(user_id, c_id);
+end;$$;
 -- ############################ EX k ################################
-
+ 
 create or replace procedure enviarMensagem(user_id int, c_id int, msg text)
 language plpgsql
 As
@@ -230,14 +298,24 @@ begin
 		raise notice 'User does not have permission to chat in this chat';
 		return;
 	END IF;
-	
 
 	INSERT INTO message(chat_id, player_id, m_time, m_text) 
 		Values(c_id, user_id, now(), msg);
 		
-exception 
+	exception 
 	when sqlstate '22001' then -- Handle messages being too big
 		raise notice 'Attempted to send a message that is too big';
+end;$$;
+
+-- RR porque se o utilizador tem permissões para falar no chat, continua a precisar de as ter até à mensagem ser enviada
+create or replace procedure enviarMensagemIsol(user_id int, c_id int, msg text)
+language plpgsql
+As
+$$
+begin
+	rollback;
+	SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+	call enviarMensagem(user_id, c_id, msg);
 end;$$;
 
 -- ############################ EX l ################################

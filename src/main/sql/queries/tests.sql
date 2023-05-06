@@ -958,7 +958,9 @@ $$
         msg text;
         res record;
     begin
-        UPDATE match_multiplayer SET state = 'Finished' where match_number = 2 and game_id = 'bbbbbbbbb1';
+		UPDATE player_score SET score = 5 WHERE player_id = 2 AND match_number = 2 AND game_id = 'bbbbbbbbb1';
+	
+        UPDATE match_multiplayer SET state = 'Finished' WHERE match_number = 2 AND game_id = 'bbbbbbbbb1';
 
         SELECT * FROM player_badge where player_id = 2 and b_name = 'Win-Streak' and game_id = 'bbbbbbbbb1' into res;
 

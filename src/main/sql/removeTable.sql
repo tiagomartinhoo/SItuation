@@ -1,38 +1,39 @@
 DO
 $$
-begin
-	drop view if exists jogadortotalinfo;
+BEGIN
 
-    drop table if exists friendship;
+	DROP VIEW IF EXISTS jogadortotalinfo;
 
-    drop table if exists chat_lookup;
+    DROP TABLE IF EXISTS friendship;
 
-    drop table if exists message;
+    DROP TABLE IF EXISTS chat_lookup;
 
-    drop table if exists chat;
+    DROP TABLE IF EXISTS message;
 
-    drop table if exists purchase;
+    DROP TABLE IF EXISTS chat;
 
-    drop table if exists match_normal;
+    DROP TABLE IF EXISTS purchase;
 
-    drop table if exists match_multiplayer;
+    DROP TABLE IF EXISTS match_normal;
 
-    drop table if exists player_score;
+    DROP TABLE IF EXISTS match_multiplayer;
 
-    drop table if exists match;
+    DROP TABLE IF EXISTS player_score;
 
-    drop table if exists player_badge;
+    DROP TABLE IF EXISTS match;
 
-    drop table if exists badge;
+    DROP TABLE IF EXISTS player_badge;
 
-    drop table if exists statistic_player;
+    DROP TABLE IF EXISTS badge;
 
-    drop table if exists player;
+    DROP TABLE IF EXISTS statistic_player;
 
-    drop table if exists region;
+    DROP TABLE IF EXISTS player;
 
-    drop table if exists statistic_game;
+    DROP TABLE IF EXISTS region;
 
-    drop table if exists game;
+    DROP TABLE IF EXISTS statistic_game;
 
-end;$$;
+    DROP TABLE IF EXISTS game;
+
+END;$$;

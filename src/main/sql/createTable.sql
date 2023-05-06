@@ -1,6 +1,7 @@
 DO
 $$
 BEGIN
+
     CREATE TABLE IF NOT EXISTS region (
         r_name  VARCHAR(20) PRIMARY KEY
     );
@@ -75,11 +76,13 @@ BEGIN
     CREATE TABLE IF NOT EXISTS match (
         number      INT NOT NULL,
         game_id     VARCHAR(10) NOT NULL,
+		region_name VARCHAR(20) NOT NULL,
         dt_start    TIMESTAMP NOT NULL,
         dt_end      TIMESTAMP,
 
         PRIMARY KEY(number, game_id),
         FOREIGN KEY(game_id) REFERENCES game (id),
+		FOREIGN KEY(region_name) REFERENCES region (r_name),
 
         CONSTRAINT start_date_less_than_end CHECK ( dt_start < dt_end)
     );
@@ -156,4 +159,5 @@ BEGIN
 
         FOREIGN KEY(game_id) REFERENCES game (id)
     );
+
 END;$$;

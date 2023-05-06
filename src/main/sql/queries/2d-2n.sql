@@ -139,7 +139,8 @@ begin
 	end if;
 
 	-- Obtain user points in the game
-	select into user_points SUM(p.score) from PLAYER_SCORE as p where p.player_id = user_id and (p.game_id = game);
+	select into user_points SUM(p.score) from PLAYER_SCORE as p where p.player_id = user_id and (p.game_id = game) 
+		AND p.game_id IN (SELECT game_id FROM match where match.dt_end is not null);
 	-- Obtain needed points for the badge
 	select into needed_points b.points_limit from BADGE as b where b.game_id = game_id and b.b_name = badge;
 	

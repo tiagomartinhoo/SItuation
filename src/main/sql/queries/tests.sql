@@ -256,7 +256,7 @@ DECLARE
 BEGIN
 	SELECT totalJogosJogador(200) INTO res;
 
-	IF res = 0 THEN
+	IF res IS NULL THEN
 		RAISE NOTICE 'Test %: Result OK', test_name;
 	ELSE
 		RAISE NOTICE 'Test %: Result FAIL, res= %', test_name, res;
@@ -280,7 +280,7 @@ DECLARE
 BEGIN
 	SELECT totalJogosJogador(null) INTO res;
 
-	IF res = 0 THEN
+	IF res IS NULL THEN
 		RAISE NOTICE 'Test %: Result OK', test_name;
 	ELSE
 		RAISE NOTICE 'Test %: Result FAIL', test_name;

@@ -1,6 +1,6 @@
 DO
 $$
-begin
+BEGIN
     CREATE TABLE IF NOT EXISTS region (
         r_name  VARCHAR(20) PRIMARY KEY
     );
@@ -127,7 +127,6 @@ begin
         FOREIGN KEY(game_id) REFERENCES game (id),
 
         CONSTRAINT url_is_valid CHECK ( url LIKE 'https://%' )
-
     );
 	
 	CREATE TABLE IF NOT EXISTS player_badge (
@@ -157,4 +156,4 @@ begin
 
         FOREIGN KEY(game_id) REFERENCES game (id)
     );
-end;$$;
+END;$$;

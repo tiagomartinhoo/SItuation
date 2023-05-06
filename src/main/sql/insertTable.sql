@@ -52,7 +52,7 @@ BEGIN
 
     INSERT INTO match(number, game_id, region_name, dt_start, dt_end)
         VALUES(1, 'abcdefghi8', 'Sintra', '2023-03-01 04:06:10', '2023-03-02 04:06:10'),
-        (2, 'bbbbbbbbb1', 'Cascais', '2023-01-25 04:06:10', '2023-01-26 04:06:10')
+        (2, 'bbbbbbbbb1', 'Cascais', '2023-01-25 04:06:10', null)
     ;
 
     INSERT INTO match_normal(match_number, game_id, difficulty_level)

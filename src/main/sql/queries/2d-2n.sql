@@ -40,7 +40,9 @@ CREATE OR REPLACE PROCEDURE criarJogador(
 BEGIN
 	INSERT INTO player(email, username, activity_state, region_name)
 		VALUES(p_email, p_username, p_activity_state, p_region_name);
-	-- TODO Exception handling
+	exception
+		when sqlstate '23505' then -- Handle duplicate key (bad insert)
+			raise notice 'The email/username are already in use';
 END;$$;
 
 CREATE OR REPLACE PROCEDURE mudarEstadoJogador(

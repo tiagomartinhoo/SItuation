@@ -1,113 +1,115 @@
--- Util functions
+-- Util functions for the errors handling
+
+CREATE OR REPLACE FUNCTION check_player_duplicate(p_email TEXT, p_name TEXT)
+	RETURNS VOID
+	LANGUAGE plpgsql
+AS $$
+BEGIN
+	PERFORM FROM player WHERE email = p_email;
+	IF FOUND THEN
+		RAISE EXCEPTION 'Player with email % already exists.', p_email
+		    USING ERRCODE = '23505';
+	END IF;
+
+	PERFORM FROM player WHERE username = p_name;
+	IF FOUND THEN
+		RAISE EXCEPTION 'Player with name % already exists.', p_name
+		    USING ERRCODE = '23505';
+	END IF;
+END;$$;
 
 CREATE OR REPLACE FUNCTION check_player_exists(p_id INT)
-    RETURNS BOOL
+	RETURNS VOID
 	LANGUAGE plpgsql
     AS $$
 BEGIN
     PERFORM FROM player WHERE id = p_id;
     IF NOT FOUND THEN
-        RAISE NOTICE 'Player with id % does not exist', p_id;
-        RETURN FALSE;
-    ELSE
-        RETURN TRUE;
+        RAISE EXCEPTION 'Player with id % not found.', p_id
+            USING ERRCODE = '20000';
     END IF;
 END;$$;
 
 CREATE OR REPLACE FUNCTION check_player_has_state(p_id INT, state TEXT)
-	RETURNS BOOL
+	RETURNS VOID
 	LANGUAGE plpgsql
 AS $$
 BEGIN
 	PERFORM FROM player WHERE id = p_id AND activity_state = state;
-	IF NOT FOUND THEN
-		RETURN FALSE;
-	ELSE
-		RAISE NOTICE 'Player with id % already has state "%"', p_id, state;
-		RETURN TRUE;
+	IF FOUND THEN
+		RAISE EXCEPTION 'Player with id % already has state "%".', p_id, state
+		    USING ERRCODE = '23505';
 	END IF;
 END;$$;
 
 CREATE OR REPLACE FUNCTION check_player_has_badge(p_id INT, game TEXT, badge TEXT)
-	RETURNS BOOL
+	RETURNS VOID
 	LANGUAGE plpgsql
 AS $$
 BEGIN
 	PERFORM FROM PLAYER_BADGE AS t WHERE t.player_id = p_id AND game_id = game AND b_name = badge;
-	IF NOT FOUND THEN
-		RETURN FALSE;
-	ELSE
-		RAISE NOTICE 'Player with id % already has badge "%" in the game %', p_id, badge, game;
-		RETURN TRUE;
+	IF FOUND THEN
+		RAISE EXCEPTION 'Player with id % already has badge "%" in the game %.', p_id, badge, game
+		    USING ERRCODE = '23505';
 	END IF;
 END;$$;
 
 CREATE OR REPLACE FUNCTION check_game_exists(g_id VARCHAR)
-	RETURNS BOOL
+	RETURNS VOID
 	LANGUAGE plpgsql
 AS $$
 BEGIN
 	PERFORM FROM game WHERE id = g_id;
 	IF NOT FOUND THEN
-		RAISE NOTICE 'Game with id % does not exist', g_id;
-		RETURN FALSE;
-	ELSE
-		RETURN TRUE;
+		RAISE EXCEPTION 'Game with id % not found.', g_id
+			USING ERRCODE = '20000';
 	END IF;
 END;$$;
 
 CREATE OR REPLACE FUNCTION check_chat_exists(c_id INT)
-	RETURNS BOOL
+	RETURNS VOID
 	LANGUAGE plpgsql
 AS $$
 BEGIN
 	PERFORM FROM chat WHERE id = c_id;
 	IF NOT FOUND THEN
-		RAISE NOTICE 'Chat with id % does not exist', c_id;
-		RETURN FALSE;
-	ELSE
-		RETURN TRUE;
+		RAISE EXCEPTION 'Chat with id % not found.', c_id
+			USING ERRCODE = '20000';
 	END IF;
 END;$$;
 
 CREATE OR REPLACE FUNCTION check_chat_name_is_empty(c_name TEXT)
-    RETURNS BOOL
+	RETURNS VOID
 	LANGUAGE plpgsql
     AS $$
 BEGIN
     IF length(c_name) = 0 THEN
-        RAISE NOTICE 'Name of the chat can not be empty';
-        RETURN TRUE;
-    ELSE
-        RETURN FALSE;
-    END IF;
+        RAISE EXCEPTION 'Name of the chat can not be empty.'
+			USING ERRCODE = '22004';
+	END IF;
 END;$$;
 
 CREATE OR REPLACE FUNCTION check_player_in_chat(p_id INT, c_id INT)
-	RETURNS BOOL
+	RETURNS VOID
+	LANGUAGE plpgsql
+AS $$
+BEGIN
+	PERFORM FROM chat_lookup WHERE player_id = p_id AND chat_id = c_id;
+	IF FOUND THEN
+		RAISE EXCEPTION 'Player with id % already in chat with id %', p_id, c_id
+			USING ERRCODE = '23505';
+	END IF;
+END;$$;
+
+CREATE OR REPLACE FUNCTION check_player_chat_permission(p_id INT, c_id INT)
+	RETURNS VOID
 	LANGUAGE plpgsql
 AS $$
 BEGIN
 	PERFORM FROM chat_lookup WHERE player_id = p_id AND chat_id = c_id;
 	IF NOT FOUND THEN
-		RETURN FALSE;
-	ELSE
-		RAISE NOTICE 'Player with id % already in chat with id %', p_id, c_id;
-		RETURN TRUE;
-	END IF;
-END;$$;
-
-CREATE OR REPLACE FUNCTION check_player_chat_permission(p_id INT, c_id INT)
-	RETURNS BOOL
-	LANGUAGE plpgsql
-AS $$
-BEGIN
-
-	IF NOT check_player_in_chat(p_id, c_id) THEN
-		RAISE NOTICE 'Player does not have permission to send messages in this chat';
-		RETURN FALSE;
-	ELSE
-		RETURN TRUE;
+		RAISE EXCEPTION 'Player with id % does not have permission to send messages in chat with id %', p_id, c_id
+			USING ERRCODE = '20000';
 	END IF;
 END;$$;
 
@@ -123,12 +125,10 @@ CREATE OR REPLACE PROCEDURE criarJogador(
     LANGUAGE plpgsql
 	AS $$
 BEGIN
+    PERFORM check_player_duplicate(p_email, p_username);
+
 	INSERT INTO player(email, username, activity_state, region_name)
 		VALUES(p_email, p_username, p_activity_state, p_region_name);
-
-	EXCEPTION
-		WHEN SQLSTATE '23505' THEN -- Handle duplicate key (bad insert)
-			RAISE NOTICE 'The email/username are already in use';
 END;$$;
 
 CREATE OR REPLACE PROCEDURE mudarEstadoJogador(
@@ -138,9 +138,8 @@ CREATE OR REPLACE PROCEDURE mudarEstadoJogador(
     LANGUAGE plpgsql
 	AS $$
 BEGIN
-	IF NOT check_player_exists(p_id) OR check_player_has_state(p_id, new_state) THEN
-		RETURN;
-	END IF;
+	PERFORM check_player_exists(p_id);
+	PERFORM check_player_has_state(p_id, new_state);
 
 	UPDATE player SET activity_state = new_state WHERE id = p_id;
 END;$$;
@@ -176,9 +175,7 @@ CREATE OR REPLACE FUNCTION totalPontosJogador(p_id INT)
 DECLARE
 	points INT;
 BEGIN
-	IF NOT check_player_exists(p_id) THEN
-		RETURN NULL;
-	END IF;
+	PERFORM check_player_exists(p_id);
 
 	SELECT SUM(p.score) INTO points FROM player_score AS p WHERE p.player_id = p_id;
 	RETURN points;
@@ -195,9 +192,7 @@ CREATE OR REPLACE FUNCTION totalJogosJogador(p_id INT)
 DECLARE
 	games_count INT;
 BEGIN
-	IF NOT check_player_exists(p_id) THEN
-		RETURN NULL;
-	END IF;
+	PERFORM check_player_exists(p_id);
 
 	SELECT COUNT(DISTINCT game_id) INTO games_count FROM player_score AS ps WHERE ps.player_id = p_id;
 	RETURN games_count;
@@ -207,20 +202,18 @@ END;$$;
 -- ############################ EX g ################################
 
 CREATE OR REPLACE FUNCTION pontosJogoPorJogador(g_id VARCHAR)
-    RETURNS TABLE(user_id INT, points INT)
+    RETURNS TABLE(player_id INT, points INT)
 	LANGUAGE plpgsql
 	AS $$
 DECLARE
     i RECORD;
 BEGIN
-	IF NOT check_game_exists(g_id) THEN
-		RETURN;
-	END IF;
+	PERFORM check_game_exists(g_id);
 
 	FOR i IN (
 		SELECT p.player_id, SUM(p.score) FROM player_score AS p WHERE p.game_id = g_id GROUP BY p.player_id
 	) LOOP
-		user_id := i.player_id;
+		player_id := i.player_id;
 		points := i.sum;
 		RETURN NEXT;
 	END LOOP;
@@ -232,7 +225,7 @@ END;$$;
 
 CREATE OR REPLACE PROCEDURE associarCrachá(
 	p_id INT,
-	game TEXT,
+	g_id TEXT,
 	badge TEXT
 )
 	LANGUAGE plpgsql
@@ -241,23 +234,19 @@ DECLARE
 	needed_points INT DEFAULT -1;
 	user_points INT DEFAULT -1;
 BEGIN
-	IF NOT check_player_exists(p_id) OR check_player_has_badge(p_id, game, badge) THEN
-		RETURN;
-	END IF;
+	PERFORM check_player_exists(p_id);
+	PERFORM check_game_exists(g_id);
+	PERFORM check_player_has_badge(p_id, g_id, badge);
 
 	-- Obtain user points in the game
-	SELECT SUM(p.score) INTO user_points FROM player_score AS p WHERE p.player_id = p_id AND p.game_id = game;
+	SELECT SUM(p.score) INTO user_points FROM player_score AS p WHERE p.player_id = p_id AND p.game_id = g_id;
 	-- Obtain needed points for the badge
-	SELECT b.points_limit INTO needed_points FROM badge AS b WHERE b.game_id = game AND b.b_name = badge;
-
-	IF needed_points = -1 OR user_points = -1 THEN
-		RAISE NOTICE 'One of the queries went wrong';
-	END IF;
+	SELECT b.points_limit INTO needed_points FROM badge AS b WHERE b.game_id = g_id AND b.b_name = badge;
 
 	IF user_points >= needed_points THEN
-		INSERT INTO player_badge VALUES(p_id, badge, game);
+		INSERT INTO player_badge VALUES(p_id, badge, g_id);
 	ELSE
-		RAISE NOTICE 'User does not have enough points: (%) needed: (%)', user_points, needed_points;
+		RAISE EXCEPTION 'Player does not have enough points: (%) needed: (%)', user_points, needed_points;
 	END IF;
 END;$$;
 
@@ -309,9 +298,8 @@ CREATE OR REPLACE PROCEDURE iniciarConversa (
 DECLARE
 	player_name VARCHAR;
 BEGIN
-	IF NOT check_player_exists(p_id) OR check_chat_name_is_empty(chat_name) THEN
-		RETURN;
-	END IF;
+	PERFORM check_player_exists(p_id);
+	PERFORM check_chat_name_is_empty(chat_name);
 
 	-- Insert a new chat and get its id
 	INSERT INTO chat (c_name) VALUES (chat_name) RETURNING id INTO c_id;
@@ -353,11 +341,9 @@ CREATE OR REPLACE PROCEDURE juntarConversa(
 DECLARE
 	player_name VARCHAR;
 BEGIN
-	IF NOT check_player_exists(p_id) OR
-	   NOT check_chat_exists(c_id) OR
-	   check_player_in_chat(p_id, c_id) THEN
-	       RETURN;
-	END IF;
+	PERFORM check_player_exists(p_id);
+	PERFORM check_chat_exists(c_id);
+	PERFORM check_player_in_chat(p_id, c_id);
 
 	-- Insert lookup record for the player and the chat
 	INSERT INTO chat_lookup(chat_id, player_id) VALUES (c_id, p_id);
@@ -395,11 +381,9 @@ CREATE OR REPLACE PROCEDURE enviarMensagem(
 	LANGUAGE plpgsql
 	AS $$
 BEGIN
-	IF NOT check_player_exists(p_id) OR
-	   NOT check_chat_exists(c_id) OR
-	   NOT check_player_chat_permission(p_id, c_id) THEN
-	       RETURN;
-	END IF;
+	PERFORM check_player_exists(p_id);
+	PERFORM check_chat_exists(c_id);
+	PERFORM check_player_chat_permission(p_id, c_id);
 
 	INSERT INTO message(chat_id, player_id, m_text) VALUES(c_id, p_id, msg);
 		

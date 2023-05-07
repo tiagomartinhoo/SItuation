@@ -1,138 +1,198 @@
+
+CREATE OR REPLACE FUNCTION test_ok(test_name TEXT)
+    RETURNS VOID
+	LANGUAGE plpgsql
+	AS $$
+BEGIN
+	RAISE NOTICE 'teste %: Resultado OK', test_name;
+END;$$;
+
+
+CREATE OR REPLACE FUNCTION test_fails(test_name TEXT, test_error TEXT)
+	RETURNS VOID
+	LANGUAGE plpgsql
+AS $$
+BEGIN
+	RAISE NOTICE 'teste %: Resultado FAIL: %', test_name, test_error;
+END;$$;
+
+
+CREATE OR REPLACE FUNCTION test_fails_with_exception(test_name TEXT, code TEXT, msg TEXT)
+	RETURNS VOID
+	LANGUAGE plpgsql
+AS $$
+BEGIN
+	RAISE NOTICE 'teste %: Resultado FAIL EXCEPTION', test_name;
+	RAISE NOTICE 'An exception did not get handled: code= % : %', code, msg;
+END;$$;
+
+
 -- ############################ EX d ################################
 
 DO
 $$
 DECLARE
-	test_name text := 'criarJogador criar novo Player';
-	code char(5) default '00000';
-	msg text;
-	res record;
-begin
+	test_name TEXT := '1: Criar jogador com dados bem passados';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res RECORD;
+	player_email_test CONSTANT TEXT := 'usertest@gmail.com';
+BEGIN
+	CALL criarJogador(player_email_test,'userTest','Active','Sintra');
 
-	CALL criarJogador('test@gmail.com','test','Banned','Sintra');
+	PERFORM FROM PLAYER WHERE email = player_email_test INTO res;
 
-	select * FROM PLAYER where email = 'test@gmail.com' into res;
+	IF FOUND THEN
+		PERFORM test_ok(test_name);
+	END IF;
 
-	if res is null then
-		raise notice 'teste %: Resultado FAIL', test_name;
-	else
-		raise notice 'teste %: Resultado OK', test_name;
-	end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
+    EXCEPTION
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+            GET STACKED DIAGNOSTICS
                 code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
+            PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
+
+DO
+$$
+DECLARE
+	test_name TEXT := '2: Criar jogador com email repetido';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_email_test CONSTANT TEXT := 'usertest@gmail.com';
+BEGIN
+	PERFORM FROM player WHERE email = player_email_test;
+	IF NOT FOUND THEN
+		CALL criarJogador(player_email_test,'userTest','Active','Sintra');
+	END IF;
+
+	CALL criarJogador(player_email_test,'userTest','Active','Sintra');
+
+	EXCEPTION
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
+
+DO
+$$
+	DECLARE
+		test_name TEXT := '3: Criar jogador com nome repetido';
+		code CHAR(5) := '00000';
+		msg TEXT;
+		player_name_test CONSTANT TEXT := 'userTest';
+	BEGIN
+		PERFORM FROM player WHERE username = player_name_test;
+		IF NOT FOUND THEN
+			CALL criarJogador('usertest@gmail.com',player_name_test,'Active','Sintra');
+		END IF;
+
+		CALL criarJogador('usertest@gmail.com',player_name_test,'Active','Sintra');
+
+	EXCEPTION
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
+
+DO
+$$
+DECLARE
+	test_name TEXT := '4: Mudar estado do jogador com dados bem passados';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res RECORD;
+	player_id_test CONSTANT INT := 1;
+    player_new_state_test CONSTANT TEXT := 'Inactive';
+BEGIN
+	CALL mudarEstadoJogador(player_id_test,player_new_state_test);
+
+	SELECT activity_state FROM player WHERE id = player_id_test INTO res;
+
+	IF res.activity_state = player_new_state_test THEN
+		PERFORM test_ok(test_name);
+	ELSE
+		PERFORM test_fails(test_name, CONCAT('The state of the player has not been changed, current state is ', res.activity_state));
+	END IF;
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
 end;$$;
 
+DO
+$$
+DECLARE
+	test_name TEXT := '5: Desativar jogador com dados bem passados';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res RECORD;
+	player_id_test CONSTANT INT := 1;
+BEGIN
+	CALL desativarJogador(player_id_test);
+
+	SELECT activity_state FROM player WHERE id = player_id_test INTO res;
+
+	IF res.activity_state = 'Inactive' THEN
+		PERFORM test_ok(test_name);
+	ELSE
+		PERFORM test_fails(test_name, CONCAT('The player has not been inactive, current state is ', res.activity_state));
+	END IF;
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$
-    DECLARE
-        test_name text := 'criarJogador Player existente';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
+DECLARE
+	test_name TEXT := '6: Banir jogador com dados bem passados';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res RECORD;
+	player_id_test CONSTANT INT := 1;
+BEGIN
+	CALL banirJogador(player_id_test);
 
-        select * FROM PLAYER where email = 'test@gmail.com' into res;
+	SELECT activity_state FROM player WHERE id = player_id_test INTO res;
 
-        if res is null then
-            CALL criarJogador('test@gmail.com','test','Banned','Sintra');
-            raise notice 'teste %: Resultado FAIL', test_name;
-        else
-            raise notice 'teste %: Resultado OK', test_name;
-        end if;
+	IF res.activity_state = 'Banned' THEN
+		PERFORM test_ok(test_name);
+	ELSE
+		PERFORM test_fails(test_name, CONCAT('The player has not been banned, current state is ', res.activity_state));
+	END IF;
 
-
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
-
-DO
-$$
-    DECLARE
-        test_name text := 'mudarEstadoJogador altera estado corretamente';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        CALL mudarEstadoJogador(1,'Inactive');
-
-        select activity_state FROM PLAYER where id = 1 into res;
-
-        if res.activity_state = 'Inactive' then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
-
-DO
-$$
-    DECLARE
-        test_name text := 'desativarJogador desativa o jogador corretamente';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        CALL desativarJogador(2);
-
-        select activity_state FROM PLAYER where id = 2 into res;
-
-        if res.activity_state = 'Inactive' then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
-
-DO
-$$
-    DECLARE
-        test_name text := 'banirJogador bane o jogador corretamente';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        CALL banirJogador(2);
-
-        select activity_state FROM PLAYER where id = 2 into res;
-
-        if res.activity_state = 'Banned' then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 
 -- ############################ EX e ################################
@@ -140,79 +200,53 @@ $$
 DO
 $$
 DECLARE
-	test_name text := 'totalPontosJogador User não existente';
-	code char(5) default '00000';
-	msg text;
-	res int;
-begin
-	select totalPontosJogador(201) into res;
-	
-	if res IS NULL then
-		raise notice 'teste %: Resultado OK', test_name;
-	else
-		raise notice 'teste %: Resultado FAIL, res=%', test_name, res;
-	end if;
-	exception
-		when others then
-		
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	test_name TEXT := '7: Total de pontos de um jogador com um jogador existente';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res INT;
+	player_id_test CONSTANT INT := 1;
+    player_points_expected CONSTANT INT := 3;
+BEGIN
+	SELECT totalPontosJogador(player_id_test) INTO res;
+
+	IF res = player_points_expected THEN
+		PERFORM test_ok(test_name);
+	ELSE
+		PERFORM test_fails(test_name, CONCAT('Excpected ', player_points_expected, ' points, but got ', res));
+	END IF;
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$
 DECLARE
-	test_name text := 'totalPontosJogador User null';
-	code char(5) default '00000';
-	msg text;
-	res int;
-begin
-	select totalPontosJogador(null) into res;
-	
-	if res IS NULL then
-		raise notice 'teste %: Resultado OK', test_name;
-	else
-		raise notice 'teste %: Resultado FAIL', test_name;
-	end if;
-	exception
-		when others then
-		
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	test_name TEXT := '8: Total de pontos de um jogador com um jogador que não existe';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res INT;
+	player_id_test CONSTANT INT := 100;
+BEGIN
+	SELECT totalPontosJogador(player_id_test) INTO res;
 
-DO
-$$
-DECLARE
-	test_name text:= 'totalPontosJogador User ids 1, 2 and 3';
-	code char(5) default '00000';
-	msg text;
-	user1_p int;
-	user2_p int;
-	user3_p int;
-begin
-	SELECT totalPontosJogador(1) into user1_p;
-	SELECT totalPontosJogador(2) into user2_p;
-	SELECT totalPontosJogador(3) into user3_p;
-	
-	if user1_p = 3 and user2_p = 2 and user3_p = 5 then
-		raise notice 'teste %: Resultado OK', test_name;
-	else
-		raise notice 'teste %: Resultado FAIL', test_name;
-		raise notice '1:%, 2:%, 3:%',user1_p, user2_p, user3_p;
-	end if;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	IF res IS NOT NULL THEN
+		PERFORM test_fails(test_name, CONCAT('The function shouldn''t return anything, but it returns ', res));
+	END IF;
+
+	EXCEPTION
+			WHEN SQLSTATE '20000' THEN
+				PERFORM test_ok(test_name);
+			WHEN OTHERS THEN
+				GET STACKED DIAGNOSTICS
+					code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+				PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 
 -- ############################ EX f ################################
@@ -220,78 +254,52 @@ end;$$;
 DO
 $$
 DECLARE
-	test_name TEXT:= 'totalJogosJogador with user ids 1, 2 and 3';
-	code CHAR(5) DEFAULT '00000';
+	test_name TEXT:= '9: Total de jogos de um jogador com um jogador existente';
+	code CHAR(5) := '00000';
 	msg TEXT;
-	user1_j INT;
-	user2_j INT;
-	user3_j INT;
+	res INT;
+	player_id_test CONSTANT INT := 1;
+	player_games_expected CONSTANT INT := 1;
 BEGIN
-	SELECT totalJogosJogador(1) INTO user1_j;
-	SELECT totalJogosJogador(2) INTO user2_j;
-	SELECT totalJogosJogador(3) INTO user3_j;
+	SELECT totalJogosJogador(player_id_test) INTO res;
 
-	IF user1_j = 1 AND user2_j = 2 AND user3_j = 2 THEN
-		RAISE NOTICE 'Test %: Result OK', test_name;
+	IF res = player_games_expected THEN
+		PERFORM test_ok(test_name);
 	ELSE
-		RAISE NOTICE 'Test %: Result FAIL', test_name;
-		RAISE NOTICE '1:%, 2:%, 3:%', user1_j, user2_j, user3_j;
+		PERFORM test_fails(test_name, CONCAT('Excpected ', player_games_expected, ' games, but got ', res));
 	END IF;
 
-EXCEPTION
-	WHEN OTHERS THEN
-		GET STACKED DIAGNOSTICS
-			code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-		RAISE NOTICE 'Test %: Result FAIL EXCEPTION', test_name;
-		RAISE NOTICE 'An exception did not get handled: code= % : %', code, msg;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
 END;$$;
 
 DO
 $$
 DECLARE
-	test_name TEXT := 'totalJogosJogador with user that does not exists';
+	test_name TEXT := '10: Total de jogos de um jogador com um jogador que não existe';
 	code CHAR(5) DEFAULT '00000';
 	msg TEXT;
 	res INT;
+	player_id_test CONSTANT INT := 100;
 BEGIN
-	SELECT totalJogosJogador(200) INTO res;
+	SELECT totalJogosJogador(player_id_test) INTO res;
 
-	IF res IS NULL THEN
-		RAISE NOTICE 'Test %: Result OK', test_name;
-	ELSE
-		RAISE NOTICE 'Test %: Result FAIL, res= %', test_name, res;
+	IF res IS NOT NULL THEN
+		PERFORM test_fails(test_name, CONCAT('The function shouldn''t return anything, but it returns ', res));
 	END IF;
-EXCEPTION
-	WHEN OTHERS THEN
 
-		GET STACKED DIAGNOSTICS
-			code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-		RAISE NOTICE 'Test %: Result FAIL EXCEPTION', test_name;
-		RAISE NOTICE 'An exception did not get handled: code= % : %', code, msg;
-END;$$;
-
-DO
-$$
-DECLARE
-	test_name TEXT := 'totalJogosJogador User null';
-	code CHAR(5) DEFAULT '00000';
-	msg TEXT;
-	res INT;
-BEGIN
-	SELECT totalJogosJogador(null) INTO res;
-
-	IF res IS NULL THEN
-		RAISE NOTICE 'Test %: Result OK', test_name;
-	ELSE
-		RAISE NOTICE 'Test %: Result FAIL', test_name;
-	END IF;
-EXCEPTION
-	WHEN OTHERS THEN
-
-		GET STACKED DIAGNOSTICS
-			code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-		RAISE NOTICE 'Test %: Result FAIL EXCEPTION', test_name;
-		RAISE NOTICE 'An exception did not get handled: code= % : %', code, msg;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
 END;$$;
 
 
@@ -299,116 +307,97 @@ END;$$;
 
 DO
 $$
-    DECLARE
-        test_name text := 'pontosJogoPorJogador apresenta o id de um unico jogador e os seus respetivos pontos num unico jogo corretamente';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        select * FROM pontosJogoPorJogador('abcdefghi8') into res;
+DECLARE
+	test_name TEXT := '11: Total de pontos de um jogador num jogo com um jogo existente';
+	code CHAR(5) DEFAULT '00000';
+	msg TEXT;
+	res RECORD;
+	game_id_test CONSTANT TEXT := 'abcdefghi8';
+	player_id_expected CONSTANT INT := 1;
+	player_points_expected CONSTANT INT := 3;
+BEGIN
+	SELECT * FROM pontosJogoPorJogador(game_id_test) INTO res;
 
-        if res.user_id = 1 and res.points = 3 then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
+	IF res.player_id = player_id_expected THEN
+	    IF res.points = player_points_expected THEN
+			PERFORM test_ok(test_name);
+		ELSE
+			PERFORM test_fails(test_name, CONCAT('Excpected ', player_points_expected, ' points, but got ', res.points));
+		END IF;
+	ELSE
+		PERFORM test_fails(test_name, CONCAT('Excpected ', player_id_expected, ' player id, but got ', res.player_id));
+	END IF;
 
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
-
-DO
-$$
-    DECLARE
-        test_name text := 'pontosJogoPorJogador apresenta o id de vários jogadores e os seus respetivos pontos num unico jogo corretamente';
-        code char(5) default '00000';
-        msg text;
-        res record;
-        tmp_rec record;
-    begin
-
-        CREATE TEMPORARY TABLE tmp_user_points (
-           user_id INTEGER,
-           points INTEGER
-        );
-
-        INSERT INTO tmp_user_points(user_id, points) VALUES	(2,0),
-                                                            (3,1);
-
-        -- to use both table in the loop
-        for res in select p.user_id, p.points FROM pontosJogoPorJogador('bbbbbbbbb1') p
-            LOOP
-                if (res.user_id, res.points) NOT IN (SELECT user_id, points FROM tmp_user_points) then
-                    raise notice 'teste %: Resultado FAIL', test_name;
-					DROP TABLE tmp_user_points;
-					RETURN;
-                end if;
-            end loop;
-		raise notice 'teste %: Resultado OK', test_name;
-        -- drop temporary table
-        DROP TABLE tmp_user_points;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
-
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$
-    DECLARE
-        test_name text := 'pontosJogoPorJogador retorna null';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        select * FROM pontosJogoPorJogador(null) into res;
+DECLARE
+	test_name TEXT := '12: Total de pontos de vários jogadores num jogo com um jogo existente';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res RECORD;
+	game_id_test CONSTANT TEXT := 'bbbbbbbbb1';
+BEGIN
+	CREATE TEMPORARY TABLE tmp_user_points (
+	   player_id INT,
+	   points INT
+	);
 
-        if res is null then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
+	INSERT INTO tmp_user_points(player_id, points) VALUES (2,5), (3,1);
 
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	-- to use both table in the loop
+	FOR res IN SELECT p.player_id, p.points FROM pontosJogoPorJogador(game_id_test) p
+		LOOP
+			IF (res.player_id, res.points) NOT IN (SELECT player_id, points FROM tmp_user_points) THEN
+				PERFORM test_fails(test_name, CONCAT('The player ', res.player_id,' should has ', res.points,' points in the game ', game_id_test));
+				DROP TABLE tmp_user_points;
+				RETURN;
+			END IF;
+		END LOOP;
+	PERFORM test_ok(test_name);
 
+	-- drop temporary table
+	DROP TABLE tmp_user_points;
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$
-    DECLARE
-        test_name text := 'pontosJogoPorJogador jogo nao existe';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        select * FROM pontosJogoPorJogador('abscvggggg') into res;
+DECLARE
+	test_name TEXT := '13: Total de pontos de um jogador num jogo que não existe';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res RECORD;
+begin
+	SELECT pontosJogoPorJogador(null) INTO res;
 
-        if res is null then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
+	IF res IS NOT NULL THEN
+		PERFORM test_fails(test_name, CONCAT('The function shouldn''t return anything, but it returns ', res));
+	END IF;
 
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 
 -- ############################ EX h ################################
@@ -416,55 +405,60 @@ end;$$;
 DO
 $$
 DECLARE
-	test_name text:= 'associarCrachá quando utilizador não tem pontos suficientes';
+	test_name TEXT := '14: Associar crachá a um jogador que tem pontos suficientes';
 	code char(5) default '00000';
 	msg text;
-begin
-	CALL associarCrachá(2, 'bbbbbbbbb1','Win-Streak');
-	-- Não se espera que o user tenha sido associado porque não tem pontos suficientes
-	
-	PERFORM * FROM PLAYER_BADGE where player_id = 2 and b_name = 'Win-Streak' and game_id = 'abcdefghi8';
-	
-	if not found then
-		raise notice 'teste %: Resultado OK', test_name;
-	else
-		raise notice 'teste %: Resultado FAIL', test_name;
-	end if;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	player_id_test CONSTANT INT := 1;
+	game_id_test CONSTANT TEXT := 'abcdefghi8';
+	badge_name_test CONSTANT TEXT := 'test';
+BEGIN
+	CALL associarCrachá(player_id_test, game_id_test,badge_name_test);
+
+	PERFORM FROM player_badge WHERE player_id = player_id_test AND b_name = badge_name_test AND game_id = game_id_test;
+
+	IF FOUND THEN
+		PERFORM test_ok(test_name);
+	END IF;
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$
 DECLARE
-	test_name text:= 'associarCrachá quando utilizador tem pontos suficientes';
-	code char(5) default '00000';
-	msg text;
-	res record;
+	test_name TEXT := '15: Associar crachá a um jogador que não tem pontos suficientes';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_id_test CONSTANT INT := 2;
+	game_id_test CONSTANT TEXT := 'bbbbbbbbb1';
+    badge_name_test CONSTANT TEXT := 'Win-Streak';
 begin
+	CALL associarCrachá(player_id_test, game_id_test,badge_name_test);
 
-	CALL associarCrachá(1, 'abcdefghi8','test');
+	PERFORM FROM player_badge WHERE player_id = player_id_test AND b_name = badge_name_test AND game_id = game_id_test;
+	
+	IF NOT FOUND THEN
+		PERFORM test_ok(test_name);
+	END IF;
 
-	PERFORM * FROM PLAYER_BADGE where player_id = 1 and b_name = 'test' and game_id = 'abcdefghi8';
-	
-	if not found then
-		raise notice 'teste %: Resultado FAIL', test_name;
-	else
-		raise notice 'teste %: Resultado OK', test_name;
-	end if;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$

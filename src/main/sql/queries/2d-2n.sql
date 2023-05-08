@@ -453,7 +453,7 @@ BEGIN
 					CALL associarCrachá(player.player_id, NEW.game_id, badge.b_name);
 					EXCEPTION
 						WHEN SQLSTATE '22000' THEN
-
+			        	WHEN SQLSTATE '23505' THEN
 				END;
 			END LOOP;
 		END LOOP;

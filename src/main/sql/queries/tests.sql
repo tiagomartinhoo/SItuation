@@ -35,13 +35,15 @@ DECLARE
 	code CHAR(5) := '00000';
 	msg TEXT;
 	player_email_test CONSTANT TEXT := 'usertest@gmail.com';
+    player_name_test CONSTANT TEXT := 'userTest';
 BEGIN
-	CALL criarJogador(player_email_test,'userTest','Active','Sintra');
+	CALL criarJogador(player_email_test,player_name_test,'Active','Sintra');
 
-	PERFORM FROM PLAYER WHERE email = player_email_test;
+	PERFORM FROM player WHERE email = player_email_test;
 
 	IF FOUND THEN
 		PERFORM test_ok(test_name);
+		DELETE FROM player WHERE email = player_email_test;
 	END IF;
 
     EXCEPTION
@@ -60,13 +62,14 @@ DECLARE
 	code CHAR(5) := '00000';
 	msg TEXT;
 	player_email_test CONSTANT TEXT := 'usertest@gmail.com';
+	player_name_test CONSTANT TEXT := 'userTest';
 BEGIN
 	PERFORM FROM player WHERE email = player_email_test;
 	IF NOT FOUND THEN
-		CALL criarJogador(player_email_test,'userTest','Active','Sintra');
+		CALL criarJogador(player_email_test,player_name_test,'Active','Sintra');
 	END IF;
 
-	CALL criarJogador(player_email_test,'userTest','Active','Sintra');
+	CALL criarJogador(player_email_test,player_name_test,'Active','Sintra');
 
 	EXCEPTION
 		WHEN SQLSTATE '23505' THEN
@@ -83,14 +86,15 @@ $$
 		test_name TEXT := '3: Criar jogador com nome repetido';
 		code CHAR(5) := '00000';
 		msg TEXT;
+		player_email_test CONSTANT TEXT := 'usertest@gmail.com';
 		player_name_test CONSTANT TEXT := 'userTest';
 	BEGIN
 		PERFORM FROM player WHERE username = player_name_test;
 		IF NOT FOUND THEN
-			CALL criarJogador('usertest@gmail.com',player_name_test,'Active','Sintra');
+			CALL criarJogador(player_email_test,player_name_test,'Active','Sintra');
 		END IF;
 
-		CALL criarJogador('usertest@gmail.com',player_name_test,'Active','Sintra');
+		CALL criarJogador(player_email_test,player_name_test,'Active','Sintra');
 
 	EXCEPTION
 		WHEN SQLSTATE '23505' THEN
@@ -342,20 +346,20 @@ DECLARE
 	code CHAR(5) := '00000';
 	msg TEXT;
 	res RECORD;
-	game_id_test CONSTANT TEXT := 'bbbbbbbbb1';
+	game_id_test CONSTANT TEXT := 'abcdefghi8';
 BEGIN
 	CREATE TEMPORARY TABLE tmp_user_points (
 	   player_id INT,
 	   points INT
 	);
 
-	INSERT INTO tmp_user_points(player_id, points) VALUES (2,0), (3,1);
+	INSERT INTO tmp_user_points(player_id, points) VALUES (1,3), (2,2), (3,4);
 
 	-- to use both table in the loop
 	FOR res IN SELECT p.player_id, p.points FROM pontosJogoPorJogador(game_id_test) p
 		LOOP
 			IF (res.player_id, res.points) NOT IN (SELECT player_id, points FROM tmp_user_points) THEN
-				PERFORM test_fails(test_name, CONCAT('The player ', res.player_id,' should has ', res.points,' points in the game ', game_id_test));
+				PERFORM test_fails(test_name, CONCAT('The player ', res.player_id,' has ', res.points,' points in the game ', game_id_test));
 				DROP TABLE tmp_user_points;
 				RETURN;
 			END IF;
@@ -416,6 +420,7 @@ BEGIN
 
 	IF FOUND THEN
 		PERFORM test_ok(test_name);
+		DELETE FROM player_badge WHERE player_id = player_id_test AND b_name = badge_name_test AND game_id = game_id_test;
 	END IF;
 
 	EXCEPTION
@@ -435,7 +440,7 @@ DECLARE
 	test_name TEXT := '15: Associar crachá a um jogador que não tem pontos suficientes';
 	code CHAR(5) := '00000';
 	msg TEXT;
-	player_id_test CONSTANT INT := 2;
+	player_id_test CONSTANT INT := 4;
 	game_id_test CONSTANT TEXT := 'bbbbbbbbb1';
     badge_name_test CONSTANT TEXT := 'Win-Streak';
 begin
@@ -585,7 +590,7 @@ BEGIN
 		WHEN SQLSTATE '20000' THEN
 			PERFORM test_fails(test_name, SQLERRM);
 		WHEN SQLSTATE '23505' THEN
-			PERFORM test_fails(test_name, SQLERRM);
+			PERFORM test_ok(test_name);
 		WHEN OTHERS THEN
 			GET STACKED DIAGNOSTICS
 				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
@@ -843,7 +848,7 @@ DECLARE
 	test_name TEXT := '30: Após update do estado da match multiplayer de Ongoing para Finished associa os crachas corretamente';
 	code CHAR(5) := '00000';
 	msg TEXT;
-	player_id_test CONSTANT INT := 2;
+	player_id_test CONSTANT INT := 3;
 	game_id_test CONSTANT TEXT := 'bbbbbbbbb1';
     match_number_test CONSTANT INT := 2;
 BEGIN
@@ -855,6 +860,8 @@ BEGIN
 
 	IF FOUND THEN
 		PERFORM test_ok(test_name);
+	ELSE
+	    PERFORM test_fails(test_name, 'The player does not have the associated badge');
 	END IF;
 
 	EXCEPTION

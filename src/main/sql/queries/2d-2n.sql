@@ -251,8 +251,6 @@ BEGIN
 	END IF;
 END;$$;
 
-
--- RR porque há a verificação dos pontos e de o utilizador não ter o crachá (não permitir double insert)
 CREATE OR REPLACE PROCEDURE associarCracháIsol(
 	user_id INT,
 	game TEXT,
@@ -316,7 +314,6 @@ BEGIN
 	VALUES (c_id, p_id, CONCAT(player_name, ' started the chat.'));
 END;$$;
 
--- RR porque temos de garantir que as inserções e as validações continuam válidas até ao fim
 CREATE OR REPLACE PROCEDURE iniciarConversaIsol (
 	IN p_id INT,
 	IN chat_name TEXT,
@@ -358,7 +355,6 @@ BEGIN
 
 END;$$;
 
--- RR porque se verificamos que o utilizador tem permissões, continua a precisar de as ter ao inserir mensagem
 CREATE OR REPLACE PROCEDURE juntarConversaIsol(
 	p_id INT,
 	c_id INT
@@ -394,7 +390,6 @@ BEGIN
 			USING ERRCODE = '22001';
 END;$$;
 
--- RR porque se o utilizador tem permissões para falar no chat, continua a precisar de as ter até à mensagem ser enviada
 CREATE OR REPLACE PROCEDURE enviarMensagemIsol(
 	user_id INT,
 	c_id INT,

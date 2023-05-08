@@ -22,8 +22,7 @@ CREATE OR REPLACE FUNCTION test_fails_with_exception(test_name TEXT, code TEXT, 
 	LANGUAGE plpgsql
 AS $$
 BEGIN
-	RAISE NOTICE 'teste %: Resultado FAIL EXCEPTION', test_name;
-	RAISE NOTICE 'An exception did not get handled: code= % : %', code, msg;
+	RAISE NOTICE 'teste %: Resultado FAIL EXCEPTION: An exception did not get handled: code = % : %', test_name, code, msg;
 END;$$;
 
 
@@ -35,12 +34,11 @@ DECLARE
 	test_name TEXT := '1: Criar jogador com dados bem passados';
 	code CHAR(5) := '00000';
 	msg TEXT;
-	res RECORD;
 	player_email_test CONSTANT TEXT := 'usertest@gmail.com';
 BEGIN
 	CALL criarJogador(player_email_test,'userTest','Active','Sintra');
 
-	PERFORM FROM PLAYER WHERE email = player_email_test INTO res;
+	PERFORM FROM PLAYER WHERE email = player_email_test;
 
 	IF FOUND THEN
 		PERFORM test_ok(test_name);
@@ -351,7 +349,7 @@ BEGIN
 	   points INT
 	);
 
-	INSERT INTO tmp_user_points(player_id, points) VALUES (2,5), (3,1);
+	INSERT INTO tmp_user_points(player_id, points) VALUES (2,0), (3,1);
 
 	-- to use both table in the loop
 	FOR res IN SELECT p.player_id, p.points FROM pontosJogoPorJogador(game_id_test) p
@@ -443,10 +441,144 @@ DECLARE
 begin
 	CALL associarCrachá(player_id_test, game_id_test,badge_name_test);
 
-	PERFORM FROM player_badge WHERE player_id = player_id_test AND b_name = badge_name_test AND game_id = game_id_test;
-	
-	IF NOT FOUND THEN
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '22000' THEN
+			PERFORM test_ok(test_name);
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
+
+DO
+$$
+DECLARE
+	test_name TEXT := '16: Associar crachá a um jogador com dados mal passados';
+	code CHAR(5) := '00000';
+	msg TEXT;
+BEGIN
+	CALL associarCrachá(null, null, null);
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
+
+
+-- ############################ EX i ################################
+
+DO
+$$
+DECLARE
+	test_name TEXT:= '17: Iniciar conversa com dados bem passados';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_id_test CONSTANT INT := 1;
+	chat_name_test CONSTANT TEXT := 'Test Chat';
+	c_id INT;
+	m_id INT;
+BEGIN
+	CALL iniciarConversa(player_id_test, chat_name_test, c_id);
+
+	PERFORM FROM chat_lookup WHERE chat_id = c_id AND player_id = player_id_test;
+	IF FOUND THEN
+		SELECT n_order INTO m_id FROM message WHERE chat_id = c_id;
+		IF m_id = 1 THEN
+			PERFORM test_ok(test_name);
+		ELSE
+		    PERFORM test_fails(test_name, CONCAT('Inicial message was not created in the chat with id ', c_id));
+		END IF;
+	ELSE
+		PERFORM test_fails(test_name, 'Chat was not created.');
+	END IF;
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '22004' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
+
+DO
+$$
+DECLARE
+	test_name TEXT:= '18: Iniciar conversa com jogador que não existe';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_id_test CONSTANT INT := 100;
+	chat_name_test CONSTANT TEXT := 'Test Chat';
+	c_id INT;
+BEGIN
+
+	CALL iniciarConversa(player_id_test, chat_name_test, c_id);
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_ok(test_name);
+		WHEN SQLSTATE '22004' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
+
+DO
+$$
+DECLARE
+	test_name TEXT:= '19: Iniciar conversa com nome do chat vazio';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_id_test CONSTANT INT := 1;
+	chat_name_test CONSTANT TEXT := '';
+	c_id INT;
+BEGIN
+
+	CALL iniciarConversa(player_id_test, chat_name_test, c_id);
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '22004' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
+
+
+-- ############################ EX j ################################
+
+DO
+$$
+DECLARE
+	test_name TEXT := '20: Juntar um player a uma conversa com dados bem passados';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_id_test CONSTANT INT := 3;
+	chat_id_test CONSTANT INT := 1;
+BEGIN
+   CALL juntarConversa(player_id_test, chat_id_test);
+
+   PERFORM FROM chat_lookup where chat_id = chat_id_test and player_id = player_id_test;
+
+	IF FOUND THEN
 		PERFORM test_ok(test_name);
+	ELSE
+		PERFORM test_fails(test_name, 'Player did not join the chat.');
 	END IF;
 
 	EXCEPTION
@@ -463,287 +595,68 @@ END;$$;
 DO
 $$
 DECLARE
-	test_name text:= 'associarCrachá de user/game/nome nulls';
-	code char(5) default '00000';
-	msg text;
-	res record;
-begin
-
-	CALL associarCrachá(null, null, null);
-
-	-- nothing CAN happen, therefore we test the throwing of unhandled exceptions
-	raise notice 'teste %: Resultado OK', test_name;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
-
-
--- ############################ EX i ################################
-
-DO
-$$
-DECLARE
-	test_name TEXT:= 'iniciarConversa with user 1';
-	code CHAR(5) DEFAULT '00000';
+	test_name TEXT := '21: Juntar um player a uma conversa que já estava na conversa';
+	code CHAR(5) := '00000';
 	msg TEXT;
-	p_id INT := 1;
-	chat_name TEXT := 'Test Chat';
-	c_id INT;
-	m_id INT;
+	player_id_test CONSTANT INT := 3;
+	chat_id_test CONSTANT INT := 1;
 BEGIN
+    CALL juntarConversa(player_id_test,chat_id_test);
 
-	CALL iniciarConversa(p_id, chat_name, c_id);
-
-	-- Check if chat was created
-	PERFORM FROM chat WHERE id = c_id;
-	IF NOT FOUND THEN
-		RAISE NOTICE 'Test %: Result FAIL', test_name;
-		RETURN;
-	END IF;
-
-	-- Check if chat lookup was created
-	PERFORM FROM chat_lookup WHERE chat_id = c_id AND player_id = p_id;
-	IF NOT FOUND THEN
-		RAISE NOTICE 'Test %: Result FAIL', test_name;
-		RETURN;
-	END IF;
-
-	-- Check if message was created
-	SELECT n_order INTO m_id FROM message WHERE chat_id = c_id;
-	IF m_id <> 1 THEN
-		RAISE NOTICE 'Test %: Result FAIL', test_name;
-		RETURN;
-	END IF;
-
-	RAISE NOTICE 'Test %: Result OK', test_name;
-
-EXCEPTION
-	WHEN OTHERS THEN
-		GET STACKED DIAGNOSTICS
-			code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-		RAISE NOTICE 'Test %: Result FAIL EXCEPTION', test_name;
-		RAISE NOTICE 'An exception did not get handled: code= % : %', code, msg;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
 END;$$;
 
 DO
 $$
 DECLARE
-	test_name TEXT := 'iniciarConversa with user that does not exists';
-	code CHAR(5) DEFAULT '00000';
+	test_name TEXT := '22: Juntar um player a uma conversa inexistente';
+	code CHAR(5) := '00000';
 	msg TEXT;
-	p_id INT := 100;
-	chat_name TEXT := 'Test Chat';
-	c_id INT;
+	player_id_test CONSTANT INT := 3;
+	chat_id_test CONSTANT INT := 1000;
 BEGIN
+        CALL juntarConversa(player_id_test,chat_id_test);
 
-	CALL iniciarConversa(p_id, chat_name, c_id);
-
-	IF c_id IS NULL THEN
-		RAISE NOTICE 'Test %: Result OK', test_name;
-	ELSE
-		RAISE NOTICE 'Test %: Result FAIL, res= %', test_name, c_id;
-	END IF;
-EXCEPTION
-	WHEN OTHERS THEN
-
-		GET STACKED DIAGNOSTICS
-			code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-		RAISE NOTICE 'Test %: Result FAIL EXCEPTION', test_name;
-		RAISE NOTICE 'An exception did not get handled: code= % : %', code, msg;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_ok(test_name);
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
 END;$$;
 
 DO
 $$
 DECLARE
-	test_name TEXT := 'iniciarConversa with chat name empty';
-	code CHAR(5) DEFAULT '00000';
+	test_name TEXT := '23: Juntar um player inexistente a uma conversa';
+	code CHAR(5) := '00000';
 	msg TEXT;
-	p_id INT := 1;
-	chat_name TEXT := '';
-	c_id INT;
+	player_id_test CONSTANT INT := 1000;
+	chat_id_test CONSTANT INT := 1;
 BEGIN
+	CALL juntarConversa(player_id_test,chat_id_test);
 
-	CALL iniciarConversa(p_id, chat_name, c_id);
-
-	IF c_id IS NULL THEN
-		RAISE NOTICE 'Test %: Result OK', test_name;
-	ELSE
-		RAISE NOTICE 'Test %: Result FAIL', test_name;
-	END IF;
-EXCEPTION
-	WHEN OTHERS THEN
-
-		GET STACKED DIAGNOSTICS
-			code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-		RAISE NOTICE 'Test %: Result FAIL EXCEPTION', test_name;
-		RAISE NOTICE 'An exception did not get handled: code= % : %', code, msg;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_ok(test_name);
+		WHEN SQLSTATE '23505' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
 END;$$;
-
-
--- ############################ EX j ################################
-
-DO
-$$
-    DECLARE
-        test_name text := 'juntarConversa junta um player na conversa corretamente';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-       CALL juntarConversa(3,1);
-
-       SELECT * FROM chat_lookup where chat_id = 1 and player_id = 3 into res;
-
-        if res.chat_id = 1 and res.player_id = 3 then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
-
-DO
-$$
-    DECLARE
-        test_name text := 'juntarConversa junta um player que ja estava anteriormente na conversa';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        CALL juntarConversa(3,1);
-
-        SELECT * FROM chat_lookup where chat_id = 1 and player_id = 3 into res;
-
-        if res.chat_id = 1 and res.player_id = 3 then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
-
-
-DO
-$$
-    DECLARE
-        test_name text := 'juntarConversa chat id is null';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        CALL juntarConversa(3,null);
-
-        SELECT * FROM chat_lookup where chat_id = null and player_id = 3 into res;
-
-        if res is null then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
-
-DO
-$$
-    DECLARE
-        test_name text := 'juntarConversa player id is null';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        CALL juntarConversa(null,1);
-
-        SELECT * FROM chat_lookup where chat_id = 1 and player_id = null into res;
-
-        if res is null then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
-
-DO
-$$
-    DECLARE
-        test_name text := 'juntarConversa chat id does not exist';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        CALL juntarConversa(3,3512);
-
-        SELECT * FROM chat_lookup where chat_id = 3512 and player_id = 3 into res;
-
-        if res is null then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
-
-
-DO
-$$
-    DECLARE
-        test_name text := 'juntarConversa player id does not exist';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        CALL juntarConversa(7,1);
-
-        SELECT * FROM chat_lookup where chat_id = 3 and player_id = 7 into res;
-
-        if res is null then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
 
 
 -- ############################ EX k ################################
@@ -751,159 +664,140 @@ $$
 DO
 $$
 DECLARE
-	test_name text:= 'enviarMensagem valid message';
-	code char(5) default '00000';
-	msg text;
-	res record;
-begin
-	call enviarMensagem(1, 1, 'TestMessage');
+	test_name TEXT := '24: Enviar uma mensagem com dados bem passados';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res RECORD;
+	player_id_test CONSTANT INT := 1;
+	chat_id_test CONSTANT INT := 1;
+    message_test CONSTANT TEXT := 'TestMessage';
+BEGIN
+	call enviarMensagem(player_id_test, chat_id_test, message_test);
 	
 	-- Obtain last message sent to chat 1, which should be the test message sent by user 1
-	select * from message where chat_id=1 order by n_order DESC limit 1 into res;
+	SELECT * FROM message WHERE chat_id = chat_id_test ORDER BY n_order DESC LIMIT 1 INTO res;
 	
-	if res.player_id = 1 and res.m_text = 'TestMessage' then
-		raise notice 'teste %: Resultado OK', test_name;
-	else
-		raise notice 'teste %: Resultado FAIL', test_name;
-	end if;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	IF res.player_id = player_id_test AND res.m_text = message_test THEN
+		PERFORM test_ok(test_name);
+	ELSE
+		PERFORM test_fails(test_name, 'Message was not created.');
+	END IF;
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '23503' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$
 DECLARE
-	test_name text:= 'enviarMensagem user without permissions';
-	code char(5) default '00000';
-	msg text;
-	res record;
-begin
-	call enviarMensagem(1, 2, 'TestMessage');
-	
-	select * from message where chat_id=2 and player_id=1 into res;
-	
-	if res IS NULL then
-		raise notice 'teste %: Resultado OK', test_name;
-	else
-		raise notice 'teste %: Resultado FAIL', test_name;
-	end if;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	test_name TEXT := '25: Enviar uma mensagem de um jogador sem permissão';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_id_test CONSTANT INT := 1;
+	chat_id_test CONSTANT INT := 2;
+	message_test CONSTANT TEXT := 'TestMessage';
+BEGIN
+	CALL enviarMensagem(player_id_test, chat_id_test, message_test);
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '23503' THEN
+			PERFORM test_ok(test_name);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$
 DECLARE
-	test_name text:= 'enviarMensagem invalid user';
-	code char(5) default '00000';
-	msg text;
-	res record;
-begin
-	call enviarMensagem(120, 2, 'TestMessage');
-	
-	select * from message where chat_id=2 and player_id=120 into res;
-	
-	if res IS NULL then
-		raise notice 'teste %: Resultado OK', test_name;
-	else
-		raise notice 'teste %: Resultado FAIL', test_name;
-	end if;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	test_name TEXT := '26: Enviar uma mensagem de um jogador que não existe';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_id_test CONSTANT INT := 100;
+	chat_id_test CONSTANT INT := 2;
+	message_test CONSTANT TEXT := 'TestMessage';
+BEGIN
+	CALL enviarMensagem(player_id_test, chat_id_test, message_test);
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_ok(test_name);
+		WHEN SQLSTATE '23503' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$
 DECLARE
-	test_name text:= 'enviarMensagem invalid chat id';
-	code char(5) default '00000';
-	msg text;
-	res record;
-begin
-	call enviarMensagem(1, 152, 'TestMessage');
-	
-	select * from message where chat_id=152 and player_id=1 into res;
-	
-	if res IS NULL then
-		raise notice 'teste %: Resultado OK', test_name;
-	else
-		raise notice 'teste %: Resultado FAIL', test_name;
-	end if;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	test_name TEXT := '27: Enviar uma mensagem num chat que não existe';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_id_test CONSTANT INT := 1;
+	chat_id_test CONSTANT INT := 1000;
+	message_test CONSTANT TEXT := 'TestMessage';
+BEGIN
+	CALL enviarMensagem(player_id_test, chat_id_test, message_test);
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_ok(test_name);
+		WHEN SQLSTATE '23503' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 DO
 $$
 DECLARE
-	test_name text:= 'enviarMensagem user and chat null';
-	code char(5) default '00000';
-	msg text;
+	test_name TEXT := '28: Enviar uma mensagem demasiado grande';
+	code CHAR(5) := '00000';
+	msg TEXT;
 	res record;
-begin
-	call enviarMensagem(null, null, 'TestMessage');
-	
-	-- In this case nothing CAN happen, therefore we test for exceptions not being treated
-	raise notice 'teste %: Resultado OK', test_name;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
-
-DO
-$$
-DECLARE
-	test_name text:= 'enviarMensagem absurdely big message';
-	code char(5) default '00000';
-	msg text;
-	res record;
-	test_msg text := 'TestMessage21412u56271765172651726215t682165621652815a6sd67861278461261845216541858652186186888asd2418217491824879481987421914978241987
+	player_id_test CONSTANT INT := 1;
+	chat_id_test CONSTANT INT := 1;
+	message_test CONSTANT TEXT := 'TestMessage21412u56271765172651726215t682165621652815a6sd67861278461261845216541858652186186888asd2418217491824879481987421914978241987
 						TestMessage21412u56271765172651726215t682165621652815a6sd67861278461261845216541858652186186888asd2418217491824879481987421914978241987
 						TestMessage21412u56271765172651726215t682165621652815a6sd67861278461261845216541858652186186888asd2418217491824879481987421914978241987
 						TestMessage21412u56271765172651726215t682165621652815a6sd67861278461261845216541858652186186888asd2418217491824879481987421914978241987';
-begin
-	call enviarMensagem(1, 1, test_msg);
+BEGIN
+	CALL enviarMensagem(player_id_test, chat_id_test, message_test);
 	
 	-- Obtain last message, the message should not have been inserted
-	select * from message where chat_id=1 order by n_order DESC limit 1 into res;
+	SELECT * FROM message WHERE chat_id = chat_id_test ORDER BY n_order DESC LIMIT 1 INTO res;
 	
-	if res.m_text = test_msg then
-		raise notice 'teste %: Resultado FAIL', test_name;
-	else
-		raise notice 'teste %: Resultado OK', test_name;	
-	end if;
-	
-	exception
-		when others then
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	if res.m_text = message_test then
+		PERFORM test_fails(test_name, 'The message should not have been created.');
+	END IF;
+
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '22001' THEN
+			PERFORM test_ok(test_name);
+		WHEN SQLSTATE '23503' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 
 -- ############################ EX l ################################
@@ -911,34 +805,33 @@ end;$$;
 DO
 $$
 DECLARE
-	test_name TEXT := 'jogadorTotalInfo with user 1';
-	code CHAR(5) DEFAULT '00000';
+	test_name TEXT := '29: Toda a informação de um jogador com dados bem passados';
+	code CHAR(5) := '00000';
 	msg TEXT;
-	p_id INT := 1;
-	games INT := 1;
-	matches INT := 1;
-	score INT := 3;
+	p_id INT := 2;
+	games INT := 2;
+	matches INT := 2;
+	score INT := 2;
 	res_games INT;
 	res_matches INT;
 	res_score INT;
 BEGIN
 
-	SELECT total_games INTO res_games FROM jogadorTotalInfo WHERE id = p_id;
-	SELECT total_matches INTO res_matches FROM jogadorTotalInfo WHERE id = p_id;
-	SELECT total_score INTO res_score FROM jogadorTotalInfo WHERE id = p_id;
+	SELECT total_games, total_matches, total_score INTO res_games, res_matches, res_score FROM jogadorTotalInfo WHERE id = p_id;
 
 	IF games = res_games AND matches = res_matches AND score = res_score THEN
-		RAISE NOTICE 'Test %: Result OK', test_name;
+		PERFORM test_ok(test_name);
 	ELSE
-		RAISE NOTICE 'Test %: Result FAIL', test_name;
+		PERFORM test_fails(test_name, CONCAT('Expected: games = ', games, ', matches = ', matches, ', score = ', score, '. But got: games = ', res_games, ', matches = ', res_matches, ', score = ', res_score));
 	END IF;
-EXCEPTION
-	WHEN OTHERS THEN
 
-		GET STACKED DIAGNOSTICS
-			code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-		RAISE NOTICE 'Test %: Result FAIL EXCEPTION', test_name;
-		RAISE NOTICE 'An exception did not get handled: code= % : %', code, msg;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
 END;$$;
 
 
@@ -946,58 +839,34 @@ END;$$;
 
 DO
 $$
-    DECLARE
-        test_name text := 'Ex M apos update do estado da match multiplayer de Ongoing para Finished associa os crachas corretamente';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-		UPDATE player_score SET score = 5 WHERE player_id = 2 AND match_number = 2 AND game_id = 'bbbbbbbbb1';
-	
-        UPDATE match_multiplayer SET state = 'Finished' WHERE match_number = 2 AND game_id = 'bbbbbbbbb1';
+DECLARE
+	test_name TEXT := '30: Após update do estado da match multiplayer de Ongoing para Finished associa os crachas corretamente';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	player_id_test CONSTANT INT := 2;
+	game_id_test CONSTANT TEXT := 'bbbbbbbbb1';
+    match_number_test CONSTANT INT := 2;
+BEGIN
+	UPDATE player_score SET score = 5 WHERE player_id = player_id_test AND match_number = match_number_test AND game_id = game_id_test;
 
-        SELECT * FROM player_badge where player_id = 2 and b_name = 'Win-Streak' and game_id = 'bbbbbbbbb1' into res;
+	UPDATE match_multiplayer SET state = 'Finished' WHERE match_number = match_number_test AND game_id = game_id_test;
 
-        if res is not null then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
+	PERFORM FROM player_badge WHERE player_id = player_id_test AND b_name = 'Win-Streak' AND game_id = game_id_test;
 
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
+	IF FOUND THEN
+		PERFORM test_ok(test_name);
+	END IF;
 
-
-DO
-$$
-    DECLARE
-        test_name text := 'Ex M match already finished';
-        code char(5) default '00000';
-        msg text;
-        res record;
-    begin
-        SELECT * FROM match_multiplayer where match_number = 2 and game_id = 'bbbbbbbbb1' and state = 'Finished' into res;
-
-        UPDATE match_multiplayer SET state = 'Finished' where match_number = 2 and game_id = 'bbbbbbbbb1';
-
-        if res is not null then
-            raise notice 'teste %: Resultado OK', test_name;
-        else
-            raise notice 'teste %: Resultado FAIL', test_name;
-        end if;
-    exception
-        when others then
-
-            GET stacked DIAGNOSTICS
-                code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-            raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-            raise notice 'An exception did not get handled: code=%:%', code, msg;
-    end;$$;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN SQLSTATE '22000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;
 
 
 -- ############################ EX n ################################
@@ -1005,52 +874,31 @@ $$
 DO
 $$
 DECLARE
-	test_name text := 'delete existing user from jogadorTotalInfo ';
-	code char(5) default '00000';
-	msg text;
-	res record;
-	res2 record;
-begin
+	test_name TEXT := '31: Apagar um jogador de jogadorTotalInfo bane o jogador';
+	code CHAR(5) := '00000';
+	msg TEXT;
+	res RECORD;
+	res2 RECORD;
+    player_email_test TEXT := 'rafa@gmail.com';
+BEGIN
 	-- DELETE from view should result in user status being turned into banned and user disappearing from said view
-	DELETE FROM jogadorTotalInfo where email='rafa@gmail.com';
+	DELETE FROM jogadorTotalInfo WHERE email = player_email_test;
 	
-	SELECT * FROM player where email='rafa@gmail.com' into res;
+	SELECT * FROM player WHERE email = player_email_test INTO res;
 	
-	SELECT * FROM jogadorTotalInfo where email='rafa@gmail.com' into res2;
+	SELECT * FROM jogadorTotalInfo WHERE email = player_email_test INTO res2;
 	
-	if res.activity_state = 'Banned' and res2 IS NULL then
-		raise notice 'teste %: Resultado OK', test_name;
-	else
-		raise notice 'teste %: Resultado FAIL, res=%', test_name, res;
-	end if;
-	exception
-		when others then
-		
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	IF res.activity_state = 'Banned' AND res2 IS NULL THEN
+		PERFORM test_ok(test_name);
+	ELSE
+		PERFORM test_fails(test_name, 'Player is not banned.');
+	END IF;
 
-DO
-$$
-DECLARE
-	test_name text := 'delete inexistent user from jogadorTotalInfo';
-	code char(5) default '00000';
-	msg text;
-
-begin
-	
-	DELETE FROM jogadorTotalInfo where email='abcd@gamil.com';
-	
-	-- Once again we only test for unhandled exceptions
-	raise notice 'teste %: Resultado OK', test_name;
-	
-	exception
-		when others then
-		
-		GET stacked DIAGNOSTICS
-		code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
-			raise notice 'teste %: Resultado FAIL EXCEPTION', test_name;
-			raise notice 'An exception did not get handled: code=%:%', code, msg;
-end;$$;
+	EXCEPTION
+		WHEN SQLSTATE '20000' THEN
+			PERFORM test_fails(test_name, SQLERRM);
+		WHEN OTHERS THEN
+			GET STACKED DIAGNOSTICS
+				code = RETURNED_SQLSTATE, msg = MESSAGE_TEXT;
+			PERFORM test_fails_with_exception(test_name, code, msg);
+END;$$;

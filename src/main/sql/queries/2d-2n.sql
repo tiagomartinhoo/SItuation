@@ -109,7 +109,7 @@ BEGIN
 	PERFORM FROM chat_lookup WHERE player_id = p_id AND chat_id = c_id;
 	IF NOT FOUND THEN
 		RAISE EXCEPTION 'Player with id % does not have permission to send messages in chat with id %', p_id, c_id
-			USING ERRCODE = '20000';
+			USING ERRCODE = '23503';
 	END IF;
 END;$$;
 
@@ -246,7 +246,8 @@ BEGIN
 	IF user_points >= needed_points THEN
 		INSERT INTO player_badge VALUES(p_id, badge, g_id);
 	ELSE
-		RAISE EXCEPTION 'Player does not have enough points: (%) needed: (%)', user_points, needed_points;
+		RAISE EXCEPTION 'Player does not have enough points: (%) needed: (%)', user_points, needed_points
+	    	USING ERRCODE = '22000';
 	END IF;
 END;$$;
 
@@ -389,7 +390,8 @@ BEGIN
 		
 	EXCEPTION
 	WHEN SQLSTATE '22001' THEN -- Handle messages being too big
-		RAISE NOTICE 'Attempted to send a message that is too big';
+		RAISE EXCEPTION 'Attempted to send a message that is too big'
+			USING ERRCODE = '22001';
 END;$$;
 
 -- RR porque se o utilizador tem permissões para falar no chat, continua a precisar de as ter até à mensagem ser enviada
@@ -446,8 +448,13 @@ BEGIN
 				WHERE b.game_id = NEW.game_id
 			)
 			LOOP
+			    BEGIN
 				-- call the associarCrachá procedure for each badge in the game
-				CALL associarCrachá(player.player_id, NEW.game_id, badge.b_name);
+					CALL associarCrachá(player.player_id, NEW.game_id, badge.b_name);
+					EXCEPTION
+						WHEN SQLSTATE '22000' THEN
+
+				END;
 			END LOOP;
 		END LOOP;
     END IF;

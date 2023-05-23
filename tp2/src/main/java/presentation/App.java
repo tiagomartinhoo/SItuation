@@ -39,10 +39,6 @@ public class App
    @SuppressWarnings("unchecked")
 	public static void main( String[] args ) throws Exception
    {   BLService srv = new BLService();
-	   System.out.println(System.getenv("SI_DB_HOST"));
-	   System.out.println(System.getenv("SI_DB_NAME"));
-	   System.out.println(System.getenv("SI_DB_USER"));
-	   System.out.println(System.getenv("SI_DB_PW"));
 
    	ITest tests[] = new ITest[] {
          () -> {try { srv.test1(); } catch(Exception e) {}}

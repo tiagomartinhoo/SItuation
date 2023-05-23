@@ -17,6 +17,7 @@ import java.util.List;
 import jakarta.persistence.*;
 
 import model.*;
+import EntityManagerFactory.EnvironmentalEntityManagerFactory;
 
 /**
  * Hello world!
@@ -27,8 +28,9 @@ public class BLService
     //@SuppressWarnings("unchecked")
 	public void test1() throws Exception
     { //
-    	EntityManagerFactory emf = Persistence.createEntityManagerFactory("JPAEx");
-        EntityManager em = emf.createEntityManager();
+    	EntityManager em = EnvironmentalEntityManagerFactory.createEntityManager("JPAEx");
+
+//        EntityManager em = emf.createEntityManager();
         try 
         {
         	//Criar um aluno
@@ -53,14 +55,20 @@ public class BLService
         finally 
         {
         	em.close();
-            emf.close();
+//            emf.close();
         }
     }
 
+    @SuppressWarnings("preview")
     public void test2() throws Exception
     { //
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("JPAEx");
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = EnvironmentalEntityManagerFactory.createEntityManager("JPAEx");
+//        EntityManagerFactory emf = Persistence.createEntityManagerFactory("JPAEx");
+//        System.out.println("PROPERTIES");
+//        System.out.println(emf.getProperties().size());
+//        System.out.println(emf.getProperties().toString());
+//
+//        EntityManager em = emf.createEntityManager();
         try
         {
             System.out.println("Ler um cacifo");
@@ -92,7 +100,7 @@ public class BLService
         finally
         {
             em.close();
-            emf.close();
+//            emf.close();
         }
     }
 }

@@ -39,8 +39,7 @@ public class MapperGame implements IMapper <Game, Integer> {
             System.out.println(e.getMessage());
             throw e;
         }
-
-
+        return new Game();
     }
 
     public void update(Game a) throws Exception {

@@ -1,4 +1,4 @@
-package EntityManagerFactory;
+package entityManagerFactory;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.junit.rules.ExternalResource;
 
 import com.google.common.collect.ImmutableMap;
-import EntityManagerFactory.EnvironmentalEntityManagerFactory.ClosableEntityManagerFactoryProperties;
+import entityManagerFactory.EnvironmentalEntityManagerFactory.ClosableEntityManagerFactoryProperties;
 
 /*
  * Adapted tests for use within our project

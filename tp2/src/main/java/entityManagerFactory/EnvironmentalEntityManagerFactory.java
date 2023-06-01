@@ -1,4 +1,4 @@
-package EntityManagerFactory;
+package entityManagerFactory;
 
 import java.util.Collections;
 import java.util.HashMap;

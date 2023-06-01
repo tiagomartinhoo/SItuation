@@ -16,8 +16,7 @@ package businessLogic;
 import java.util.List;
 import jakarta.persistence.*;
 
-import model.*;
-import EntityManagerFactory.EnvironmentalEntityManagerFactory;
+import entityManagerFactory.EnvironmentalEntityManagerFactory;
 
 /**
  * Hello world!

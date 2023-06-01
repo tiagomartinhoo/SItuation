@@ -2,22 +2,20 @@ package model;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
-
 @Entity
-@Table(name="game")
-@NamedQuery(name="Game.findAll", query="SELECT g FROM GAME g")
-public class Game implements Serializable {
-
+@Table(name = "game", indexes = {
+        @Index(name = "game_g_name_key", columnList = "g_name", unique = true)
+})
+public class Game {
     @Id
+    @Column(name = "id", nullable = false, length = 10)
     private String id;
 
-    @Column(name = "g_name")
+    @Column(name = "g_name", nullable = false, length = 20)
     private String gName;
 
+    @Column(name = "url", length = 100)
     private String url;
-
-    public Game(){}
 
     public String getId() {
         return id;
@@ -27,11 +25,11 @@ public class Game implements Serializable {
         this.id = id;
     }
 
-    public String getgName() {
+    public String getGName() {
         return gName;
     }
 
-    public void setgName(String gName) {
+    public void setGName(String gName) {
         this.gName = gName;
     }
 
@@ -42,4 +40,5 @@ public class Game implements Serializable {
     public void setUrl(String url) {
         this.url = url;
     }
+
 }

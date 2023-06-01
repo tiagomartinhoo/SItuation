@@ -1,45 +1,48 @@
 package model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "player_badge")
 public class PlayerBadge {
+    @EmbeddedId
+    private PlayerBadgeId id;
 
-    @Id
-    @Column(name = "player_id")
-    private int playerId;
+    @MapsId("playerId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
 
-    @Id
-    @Column(name = "b_name")
-    private String bName;
+    @MapsId
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumns({
+            @JoinColumn(name = "b_name", referencedColumnName = "b_name", nullable = false),
+            @JoinColumn(name = "game_id", referencedColumnName = "game_id", nullable = false)
+    })
+    private Badge badge;
 
-    @Id
-    @Column(name = "game_id")
-    private String gameId;
-
-    public PlayerBadge() {}
-
-    public int getPlayerId() {
-        return playerId;
+    public PlayerBadgeId getId() {
+        return id;
     }
 
-    public void setPlayerId(int playerId) {
-        this.playerId = playerId;
+    public void setId(PlayerBadgeId id) {
+        this.id = id;
     }
 
-    public String getbName() {
-        return bName;
+    public Player getPlayer() {
+        return player;
     }
 
-    public void setbName(String bName) {
-        this.bName = bName;
+    public void setPlayer(Player player) {
+        this.player = player;
     }
 
-    public String getGameId() {
-        return gameId;
+    public Badge getBadge() {
+        return badge;
     }
 
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
+    public void setBadge(Badge badge) {
+        this.badge = badge;
     }
+
 }

@@ -2,37 +2,44 @@ package model;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
-
-// TODO: FOREIGN KEY DINGS
 @Entity
-@Table(name="chat_lookup")
-@NamedQuery(name="ChatLookup.findAll", query="SELECT cl FROM CHAT_LOOKUP cl")
-public class ChatLookup implements Serializable {
+@Table(name = "chat_lookup")
+public class ChatLookup {
+    @EmbeddedId
+    private ChatLookupId id;
 
-    @Id
-    @Column(name="chat_id")
-    private int chatId;
+    @MapsId("chatId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "chat_id", nullable = false)
+    private Chat chat;
 
-    @Id
-    @Column(name = "player_id")
-    private int playerId;
+    @MapsId("playerId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
 
-    public ChatLookup(){}
-
-    public int getChatId() {
-        return chatId;
+    public ChatLookupId getId() {
+        return id;
     }
 
-    public void setChatId(int chatId) {
-        this.chatId = chatId;
+    public void setId(ChatLookupId id) {
+        this.id = id;
     }
 
-    public int getPlayerId() {
-        return playerId;
+    public Chat getChat() {
+        return chat;
     }
 
-    public void setPlayerId(int playerId) {
-        this.playerId = playerId;
+    public void setChat(Chat chat) {
+        this.chat = chat;
     }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+
 }

@@ -2,57 +2,53 @@ package model;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
-
 @Entity
-@Table(name="badge")
-@NamedQuery(name="Badge.findAll", query="SELECT r FROM BADGE r")
-public class Badge implements Serializable {
+@Table(name = "badge")
+public class Badge {
+    @EmbeddedId
+    private BadgeId id;
 
-    @Id
-    @Column(name = "b_name")
-    private String bName;
-
-    @Id
-    @Column(name="game_id")
-    private String gameId;
+    @MapsId("gameId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "game_id", nullable = false)
+    private Game game;
 
     @Column(name = "points_limit")
-    private int pointsLimit;
+    private Integer pointsLimit;
 
+    @Column(name = "url", length = 100)
     private String url;
 
-    public Badge(){}
-
-    public String getbName() {
-        return bName;
+    public BadgeId getId() {
+        return id;
     }
 
-    public void setbName(String bName) {
-        this.bName = bName;
+    public void setId(BadgeId id) {
+        this.id = id;
     }
 
-    public String getGameId() {
-        return gameId;
+    public Game getGame() {
+        return game;
     }
 
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
+    public void setGame(Game game) {
+        this.game = game;
     }
 
-    public int getPointsLimit() {
+    public Integer getPointsLimit() {
         return pointsLimit;
     }
 
-    public void setPointsLimit(int pointsLimit) {
+    public void setPointsLimit(Integer pointsLimit) {
         this.pointsLimit = pointsLimit;
+    }
+
+    public String getUrl() {
+        return url;
     }
 
     public void setUrl(String url) {
         this.url = url;
     }
 
-    public String getUrl() {
-        return url;
-    }
 }

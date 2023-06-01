@@ -2,34 +2,40 @@ package model;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
-
 @Entity
-@Table(name="player")
-@NamedQuery(name="Player.findAll", query="SELECT p FROM PLAYER p")
-public class Player implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    public Player(){}
-
+@Table(name = "player", indexes = {
+        @Index(name = "player_username_key", columnList = "username", unique = true),
+        @Index(name = "player_email_key", columnList = "email", unique = true)
+})
+public class Player {
     @Id
-    private long id;
+    @Column(name = "id", nullable = false)
+    private Integer id;
 
+    @Column(name = "email", nullable = false, length = 50)
     private String email;
 
+    @Column(name = "username", nullable = false, length = 20)
     private String username;
 
-    @Column(name = "activity_state")
+    @Column(name = "activity_state", length = 100)
     private String activityState;
 
-    @OneToOne(mappedBy = "region_name")
-    private Region region;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "region_name", nullable = false)
+    private Region regionName;
 
-    public long getId() { return id; }
+    public Integer getId() {
+        return id;
+    }
 
-    public void setId(long id) { this.id = id; }
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
-    public String getEmail() { return email; }
+    public String getEmail() {
+        return email;
+    }
 
     public void setEmail(String email) {
         this.email = email;
@@ -51,11 +57,12 @@ public class Player implements Serializable {
         this.activityState = activityState;
     }
 
-    public Region getRegion() {
-        return region;
+    public Region getRegionName() {
+        return regionName;
     }
 
-    public void setRegion(Region region) {
-        this.region = region;
+    public void setRegionName(Region regionName) {
+        this.regionName = regionName;
     }
+
 }

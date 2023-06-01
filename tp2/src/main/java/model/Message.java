@@ -1,70 +1,68 @@
 package model;
 
 import jakarta.persistence.*;
-import java.sql.Timestamp;
-import java.io.Serializable;
 
-// TODO: FOREIGN KEY DINGS
+import java.time.Instant;
+
 @Entity
-@Table(name="message")
-@NamedQuery(name="Message.findAll", query="SELECT m FROM MESSAGE m")
-public class Message implements Serializable {
-    @Id
-    @Column(name = "n_order")
-    private int nOrder;
+@Table(name = "message")
+public class Message {
+    @EmbeddedId
+    private MessageId id;
 
-    @Id
-    @Column(name = "chat_id")
-    private int chatId;
+    @MapsId("chatId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "chat_id", nullable = false)
+    private Chat chat;
 
-    @Column(name = "player_id")
-    private int playerId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
 
-    @Column(name = "m_time")
-    private Timestamp mTime;
+    @Column(name = "m_time", nullable = false)
+    private Instant mTime;
 
-    @Column(name = "m_text")
+    @Column(name = "m_text", nullable = false, length = 200)
     private String mText;
 
-    public Message() {}
-
-    public int getnOrder() {
-        return nOrder;
+    public MessageId getId() {
+        return id;
     }
 
-    public void setnOrder(int nOrder) {
-        this.nOrder = nOrder;
+    public void setId(MessageId id) {
+        this.id = id;
     }
 
-    public int getChatId() {
-        return chatId;
+    public Chat getChat() {
+        return chat;
     }
 
-    public void setChatId(int chatId) {
-        this.chatId = chatId;
+    public void setChat(Chat chat) {
+        this.chat = chat;
     }
 
-    public int getPlayerId() {
-        return playerId;
+    public Player getPlayer() {
+        return player;
     }
 
-    public void setPlayerId(int playerId) {
-        this.playerId = playerId;
+    public void setPlayer(Player player) {
+        this.player = player;
     }
 
-    public Timestamp getmTime() {
+    public Instant getMTime() {
         return mTime;
     }
 
-    public void setmTime(Timestamp mTime) {
+    public void setMTime(Instant mTime) {
         this.mTime = mTime;
     }
 
-    public String getmText() {
+    public String getMText() {
         return mText;
     }
 
-    public void setmText(String mText) {
+    public void setMText(String mText) {
         this.mText = mText;
     }
+
 }

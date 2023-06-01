@@ -2,41 +2,68 @@ package model;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
+import java.time.Instant;
 
 @Entity
-@Table(name="purchase")
-@NamedQuery(name="Purchase.findAll", query="SELECT p FROM PURCHASE p")
-public class Purchase implements Serializable {
-    @Id
-    @Column(name = "player_id")
-    private int playerId;
+@Table(name = "purchase")
+public class Purchase {
+    @EmbeddedId
+    private PurchaseId id;
 
-    @Id
-    @Column(name = "game_id")
-    private String gameId;
+    @MapsId("playerId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
 
-    @Column(name = "p_date")
-    private Timestamp pDate;
+    @MapsId("gameId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "game_id", nullable = false)
+    private Game game;
 
-    private int price;
+    @Column(name = "p_date", nullable = false)
+    private Instant pDate;
 
-    public Purchase(){}
+    @Column(name = "price", nullable = false)
+    private Integer price;
 
-    public int getPlayerId() {
-        return playerId;
+    public PurchaseId getId() {
+        return id;
     }
 
-    public void setPlayerId(int playerId) {
-        this.playerId = playerId;
+    public void setId(PurchaseId id) {
+        this.id = id;
     }
 
-    public String getGameId() {
-        return gameId;
+    public Player getPlayer() {
+        return player;
     }
 
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
+    public void setPlayer(Player player) {
+        this.player = player;
     }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
+    public Instant getPDate() {
+        return pDate;
+    }
+
+    public void setPDate(Instant pDate) {
+        this.pDate = pDate;
+    }
+
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
 }

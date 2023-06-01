@@ -14,10 +14,16 @@ drop table if exists disciplinas cascade;
 
 
 --create table cacifos(numCac serial  primary key, descrCac varchar(80));
-create table cacifos(numCac int generated always as identity  primary key, descrCac varchar(80));
+create table cacifos(
+        numCac int generated always as identity primary key,
+        descrCac varchar(80)
+        );
              --aluga_al numeric(6) unique references alunos);   
-create table alunos(numAl numeric(6) primary key, nomeAl varchar(80),
-                    aluga_cac int unique references cacifos );
+create table alunos(
+        numAl numeric(6) primary key,
+        nomeAl varchar(80),
+        aluga_cac int unique references cacifos
+        );
                    
                 
 create table hobbies(numAl numeric(6) references alunos, numHb int, descr varchar(100), 

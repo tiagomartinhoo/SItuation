@@ -1,36 +1,34 @@
 package model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-import java.io.Serializable;
-
-// TODO: FOREIGN KEY DINGS
 @Entity
-@Table(name="chat")
-@NamedQuery(name="Chat.findAll", query="SELECT c FROM CHAT c")
-public class Chat implements Serializable {
-
+@Table(name = "chat")
+public class Chat {
     @Id
-    private int id;
+    @Column(name = "id", nullable = false)
+    private Integer id;
 
-    @Column(name="c_name")
+    @Column(name = "c_name", nullable = false, length = 20)
     private String cName;
 
-    public Chat(){}
-
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
-    public String getcName() {
+    public String getCName() {
         return cName;
     }
 
-    public void setcName(String cName) {
+    public void setCName(String cName) {
         this.cName = cName;
     }
+
 }

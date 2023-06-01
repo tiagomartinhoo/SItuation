@@ -2,38 +2,35 @@ package model;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
+import java.time.Instant;
 
 @Entity
-@Table(name="Match")
-@NamedQuery(name="Match.findAll", query="SELECT r FROM MATCH r")
-public class Match implements Serializable {
+@Table(name = "match")
+public class Match {
+    @EmbeddedId
+    private MatchId id;
 
-    @Id
-    private int number;
-
-    @Id
-    @OneToOne(mappedBy = "game_id")
+    @MapsId("gameId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "game_id", nullable = false)
     private Game game;
 
-    @OneToOne(mappedBy = "region_name")
-    private Region region;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "region_name", nullable = false)
+    private Region regionName;
 
-    @Column(name = "dt_start")
-    private Timestamp dtStart;
+    @Column(name = "dt_start", nullable = false)
+    private Instant dtStart;
 
     @Column(name = "dt_end")
-    private Timestamp dtEnd;
+    private Instant dtEnd;
 
-    public Match() {}
-
-    public int getNumber() {
-        return number;
+    public MatchId getId() {
+        return id;
     }
 
-    public void setNumber(int number) {
-        this.number = number;
+    public void setId(MatchId id) {
+        this.id = id;
     }
 
     public Game getGame() {
@@ -44,19 +41,28 @@ public class Match implements Serializable {
         this.game = game;
     }
 
-    public Timestamp getDtStart() {
+    public Region getRegionName() {
+        return regionName;
+    }
+
+    public void setRegionName(Region regionName) {
+        this.regionName = regionName;
+    }
+
+    public Instant getDtStart() {
         return dtStart;
     }
 
-    public void setDtStart(Timestamp dtStart) {
+    public void setDtStart(Instant dtStart) {
         this.dtStart = dtStart;
     }
 
-    public Timestamp getDtEnd() {
+    public Instant getDtEnd() {
         return dtEnd;
     }
 
-    public void setDtEnd(Timestamp dtEnd) {
+    public void setDtEnd(Instant dtEnd) {
         this.dtEnd = dtEnd;
     }
+
 }

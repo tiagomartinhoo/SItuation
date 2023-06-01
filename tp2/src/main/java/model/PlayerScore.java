@@ -2,58 +2,58 @@ package model;
 
 import jakarta.persistence.*;
 
-import java.io.Serializable;
-
 @Entity
-@Table(name="player_score")
-@NamedQuery(name="PlayerScore.findAll", query="SELECT r FROM PLAYER_SCORE r")
-public class PlayerScore implements Serializable {
+@Table(name = "player_score")
+public class PlayerScore {
+    @EmbeddedId
+    private PlayerScoreId id;
 
-    @Id
-    @Column(name = "player_id")
-    private int playerId;
+    @MapsId("playerId")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "player_id", nullable = false)
+    private Player player;
 
-    @Id
-    @Column(name = "match_number")
-    private int matchNumber;
+    @MapsId
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumns({
+            @JoinColumn(name = "match_number", referencedColumnName = "number", nullable = false),
+            @JoinColumn(name = "game_id", referencedColumnName = "game_id", nullable = false)
+    })
+    private Match match;
 
-    @Id
-    @Column(name = "game_id")
-    private String gameId;
+    @Column(name = "score", nullable = false)
+    private Integer score;
 
-    private int score;
-
-    public PlayerScore(){}
-
-    public int getPlayerId() {
-        return playerId;
+    public PlayerScoreId getId() {
+        return id;
     }
 
-    public void setPlayerId(int playerId) {
-        this.playerId = playerId;
+    public void setId(PlayerScoreId id) {
+        this.id = id;
     }
 
-    public int getMatchNumber() {
-        return matchNumber;
+    public Player getPlayer() {
+        return player;
     }
 
-    public void setMatchNumber(int matchNumber) {
-        this.matchNumber = matchNumber;
+    public void setPlayer(Player player) {
+        this.player = player;
     }
 
-    public String getGameId() {
-        return gameId;
+    public Match getMatch() {
+        return match;
     }
 
-    public void setGameId(String gameId) {
-        this.gameId = gameId;
+    public void setMatch(Match match) {
+        this.match = match;
     }
 
-    public int getScore() {
+    public Integer getScore() {
         return score;
     }
 
-    public void setScore(int score) {
+    public void setScore(Integer score) {
         this.score = score;
     }
+
 }

@@ -3,10 +3,8 @@ package model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "GAME", indexes = {
-        @Index(columnList = "g_name", unique = true)
-})
-@NamedQuery(name="Game.findAll", query="SELECT g FROM GAME g")
+@Table(name = "GAME")
+@NamedQuery(name="Game.findAll", query="SELECT g FROM Game g")
 public class Game {
     @Id
     @Column(name = "id", nullable = false, length = 10)

@@ -39,7 +39,7 @@ public class BLService
             List<Game> games = gameRepo.getAll();
 
             for (Game game: games) {
-                System.out.println(game.getId() + ": " + game.getGName() + game.getUrl());
+                System.out.println(game.getId() + ": " + game.getGName() + " " + game.getUrl());
             }
         }
         catch(Exception e)

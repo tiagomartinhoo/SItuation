@@ -13,10 +13,14 @@ acarretar problemas v�rios, em particular, no que respeita � consist�ncia 
 
 package dal;
 
+import entityManagerFactory.EnvironmentalEntityManagerFactory;
 import jakarta.persistence.EntityManager;
 
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
+
+import java.util.Collections;
+import java.util.HashMap;
 
 public abstract class AbstractDataScope implements AutoCloseable {
 	
@@ -35,7 +39,8 @@ public abstract class AbstractDataScope implements AutoCloseable {
 	
 	public AbstractDataScope() {
 		if (threadLocal.get()==null) {
-			EntityManagerFactory emf = Persistence.createEntityManagerFactory("JPAExemplo");
+			// Replaced Manager Factory with one with support for Environmental variables
+			EntityManagerFactory emf = EnvironmentalEntityManagerFactory.createEntityManagerFactory("JPAEx");
 			EntityManager em = emf.createEntityManager();
 	    	Session s = new Session();
 	    	s.ef = emf;

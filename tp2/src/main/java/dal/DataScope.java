@@ -13,7 +13,6 @@ acarretar problemas v�rios, em particular, no que respeita � consist�ncia 
 
 package dal;
 
-import model.*;
 
 import java.sql.Connection;
 import java.util.List;
@@ -33,33 +32,5 @@ public class DataScope extends AbstractDataScope implements AutoCloseable {
 		Connection cn = this.getEntityManager().unwrap(Connection.class);
 		cn.setTransactionIsolation(il);
 	}
-
-	//para uso como Unit of Work
-	public List<Aluno> getAllStudents() throws Exception {
-		return new RepositoryAlunos().getAll();
-	}
-
-	public Aluno findStudent(long Id) throws Exception  {
-		return new MapperAlunos().read(Id);
-	}
-
-	public void deleteStudent(Aluno a) throws Exception {
-		new MapperAlunos().delete(a);
-	}
-
-	public void deleteStudentByKey(long Id) throws Exception {
-		Aluno a = new Aluno();
-		a.setNumal(Id);
-		new MapperAlunos().delete(a);
-	}
-
-	public void updateStudent(Aluno a) throws Exception {
-		new MapperAlunos().update(a);
-	}
-
-	public void insertStudent(Aluno a) throws Exception {
-		new MapperAlunos().create(a);
-	}
-
 
 }

@@ -6,6 +6,9 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "match")
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(discriminatorType = DiscriminatorType.STRING,
+        name = "discr")
 public class Match {
     @EmbeddedId
     private MatchId id;
@@ -24,6 +27,12 @@ public class Match {
 
     @Column(name = "dt_end")
     private Instant dtEnd;
+
+    private String discr;
+
+    public String getDiscr() {
+        return discr;
+    }
 
     public MatchId getId() {
         return id;

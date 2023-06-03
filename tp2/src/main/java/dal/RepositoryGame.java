@@ -20,97 +20,76 @@ import jakarta.persistence.LockModeType;
 import model.Game;
 
 
-public class RepositoryGame implements IRepository <Game, Integer> {
+public class RepositoryGame implements IRepository <Game, String> {
 	
-	public Game find(Integer Id) throws Exception {
-        MapperGame m = new MapperGame();
+	public Game find(String Id) throws Exception {
+		MapperGame m = new MapperGame();
 
-	      try 
-	      {
-	    	  return m.read(Id);
-	      }
-           catch(Exception e)
-	       {
-	       	System.out.println(e.getMessage());
-	       	throw e;
-	       } 
-    	 
-}
+		try {
+			return m.read(Id);
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			throw e;
+		}
+	}
 
 
 	//Nota: optou-se por usar pessimistic locking  nas leituras
 	//      Poderia fazer sentido ter uma versão das laituras com optimistic locking
 	public  List<Game> getAll() throws Exception {
-	      try (DataScope ds = new DataScope())
-	      {
-            EntityManager em = ds.getEntityManager();
-            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
-            // com queries o flush � feito automaticamente.
-            List<Game> l = em.createQuery("select a from Aluno a",Game.class).setLockMode(LockModeType.PESSIMISTIC_READ)
-                                                                                                              .getResultList();  
-            ds.validateWork();
-            return l;
-	      }
-	        catch(Exception e)
-	       {
-	       	System.out.println(e.getMessage());
-	       	throw e;
-	       }
-
-	    	
-	    }
+		try (DataScope ds = new DataScope()) {
+			EntityManager em = ds.getEntityManager();
+			//em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
+			// com queries o flush � feito automaticamente.
+			List<Game> l = em.createNamedQuery("Game.findAll",Game.class)
+					.setLockMode(LockModeType.PESSIMISTIC_READ)
+					.getResultList();
+			ds.validateWork();
+			return l;
+		}
+		catch(Exception e) {
+			System.out.println(e.getMessage());
+			throw e;
+		}
+	}
 	
 	
 	public void add(Game a) throws Exception {
         MapperGame m = new MapperGame();
         
-      try 
-      {
-	     m.create(a);
-	   
-      }
-        catch(Exception e)
-       {
-       	System.out.println(e.getMessage());
-       	throw e;
-       }
+		try {
+			m.create(a);
 
-    	
+		}
+		catch(Exception e) {
+			System.out.println(e.getMessage());
+			throw e;
+		}
     }
     
     
 	    
 	public void save(Game a) throws Exception {
-	        MapperGame m = new MapperGame();
-	        
-	      try 
-	      {
-		     m.update(a);
-		   
-	      }
-	        catch(Exception e)
-	       {
-	       	System.out.println(e.getMessage());
-	       	throw e;
-	       }
-  
-	    	
-	    }
+		MapperGame m = new MapperGame();
+
+		try {
+			m.update(a);
+		}
+		catch(Exception e) {
+			System.out.println(e.getMessage());
+			throw e;
+		}
+	}
 	    
 	public void delete(Game a) throws Exception {
-        MapperGame m = new MapperGame();
-        
-      try 
-      {
-	     m.delete(a);;
-	   
-      }
-        catch(Exception e)
-       {
-       	System.out.println(e.getMessage());
-       	throw e;
-       }
+		MapperGame m = new MapperGame();
+
+		try {
+			m.delete(a);;
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+			throw e;
+		}
 	}
-	
 
 }

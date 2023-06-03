@@ -13,7 +13,7 @@ public class PlayerBadge {
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
-    @MapsId
+    @MapsId("badgeId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumns({
             @JoinColumn(name = "b_name", referencedColumnName = "b_name", nullable = false),

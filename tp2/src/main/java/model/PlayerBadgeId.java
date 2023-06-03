@@ -2,6 +2,8 @@ package model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -9,14 +11,21 @@ import java.util.Objects;
 @Embeddable
 public class PlayerBadgeId implements Serializable {
     private static final long serialVersionUID = -6591020232047863107L;
+
     @Column(name = "player_id", nullable = false)
     private Integer playerId;
 
-    @Column(name = "b_name", nullable = false, length = 20)
+    @JoinColumns({
+            @JoinColumn(name = "b_name", referencedColumnName = "b_name"),
+            @JoinColumn(name = "game_id", referencedColumnName = "game_id")
+    })
+    private BadgeId badgeId;
+
+    /*@Column(name = "b_name", nullable = false, length = 20)
     private String bName;
 
     @Column(name = "game_id", nullable = false, length = 10)
-    private String gameId;
+    private String gameId;*/
 
     public Integer getPlayerId() {
         return playerId;
@@ -26,7 +35,7 @@ public class PlayerBadgeId implements Serializable {
         this.playerId = playerId;
     }
 
-    public String getBName() {
+    /*public String getBName() {
         return bName;
     }
 
@@ -55,6 +64,6 @@ public class PlayerBadgeId implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(gameId, bName, playerId);
-    }
+    }*/
 
 }

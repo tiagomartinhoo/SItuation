@@ -14,9 +14,13 @@ acarretar problemas vários, em particular, no que respeita à consistência dos da
 package businessLogic;
 
 import java.util.List;
+
+import dal.DataScope;
+import dal.RepositoryGame;
 import jakarta.persistence.*;
 
 import entityManagerFactory.EnvironmentalEntityManagerFactory;
+import model.Game;
 
 /**
  * Hello world!
@@ -25,37 +29,25 @@ import entityManagerFactory.EnvironmentalEntityManagerFactory;
 public class BLService 
 {
     //@SuppressWarnings("unchecked")
-	public void test1() throws Exception
-    { //
-    	EntityManager em = EnvironmentalEntityManagerFactory.createEntityManager("JPAEx");
+	public void test1() throws Exception {
 
-//        EntityManager em = emf.createEntityManager();
-        try 
-        {
-        	//Criar um aluno
-            System.out.println("Ler um aluno");
-            em.getTransaction().begin();
+        try (DataScope ds = new DataScope()) { // Automatically calls DataScope.close() so no need to manage that
+            EntityManager em = ds.getEntityManager();
 
-        	String sql = "SELECT c FROM Cacifo c";
-        	Query query = em.createQuery(sql);
-            List<Aluno> la = query.getResultList();
+            RepositoryGame gameRepo = new RepositoryGame();
 
-            for (Aluno ax : la) 
-            {
-                System.out.printf("%d ", ax.getNumal());
-                System.out.printf("%s \n", ax.getNomeal());
+            List<Game> games = gameRepo.getAll();
+
+            for (Game game: games) {
+                System.out.println(game.getId() + ": " + game.getGName() + game.getUrl());
             }
-        } 
+        }
         catch(Exception e)
         {
         	System.out.println(e.getMessage());
         	throw e;
         }
-        finally 
-        {
-        	em.close();
-//            emf.close();
-        }
+
     }
 
     @SuppressWarnings("preview")
@@ -70,26 +62,26 @@ public class BLService
 //        EntityManager em = emf.createEntityManager();
         try
         {
-            System.out.println("Ler um cacifo");
-            EntityTransaction trans = em.getTransaction();
-
-            trans.begin();
-
-            String sql = "SELECT c FROM Cacifo c WHERE c.numCac = 3";
-            Query query = em.createQuery(sql);
-            List<Cacifo> la = query.getResultList();
-
-            for (Cacifo c : la)
-            {
-                System.out.printf("%d \n", c.getNumCac());
-                System.out.printf("%s \n", c.getDescrCac());
-                System.out.printf("%s \n", c.getAluno().getNomeal());
-
-                c.setDescrCac("Test");
-                System.out.printf("%s \n", c.getDescrCac());
-            }
-
-            trans.commit();
+//            System.out.println("Ler um cacifo");
+//            EntityTransaction trans = em.getTransaction();
+//
+//            trans.begin();
+//
+//            String sql = "SELECT c FROM Cacifo c WHERE c.numCac = 3";
+//            Query query = em.createQuery(sql);
+//            List<Cacifo> la = query.getResultList();
+//
+//            for (Cacifo c : la)
+//            {
+//                System.out.printf("%d \n", c.getNumCac());
+//                System.out.printf("%s \n", c.getDescrCac());
+//                System.out.printf("%s \n", c.getAluno().getNomeal());
+//
+//                c.setDescrCac("Test");
+//                System.out.printf("%s \n", c.getDescrCac());
+//            }
+//
+//            trans.commit();
         }
         catch(Exception e)
         {

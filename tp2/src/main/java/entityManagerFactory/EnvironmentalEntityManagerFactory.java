@@ -64,6 +64,10 @@ public class EnvironmentalEntityManagerFactory {
         return createEntityManagerFactory(persistenceUnitName, entityManagerFactoryProperties).createEntityManager();
     }
 
+    public static EntityManagerFactory createEntityManagerFactory(String persistenceUnitName) {
+       return createEntityManagerFactory(persistenceUnitName, Collections.emptyMap());
+    }
+
     public static EntityManagerFactory createEntityManagerFactory(
             String persistenceUnitName,
             Map<Object, Object> properties) {

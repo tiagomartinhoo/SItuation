@@ -3,9 +3,10 @@ package model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "game", indexes = {
-        @Index(name = "game_g_name_key", columnList = "g_name", unique = true)
+@Table(name = "GAME", indexes = {
+        @Index(columnList = "g_name", unique = true)
 })
+@NamedQuery(name="Game.findAll", query="SELECT g FROM GAME g")
 public class Game {
     @Id
     @Column(name = "id", nullable = false, length = 10)

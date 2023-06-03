@@ -2,6 +2,8 @@ package model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -12,11 +14,17 @@ public class PlayerScoreId implements Serializable {
     @Column(name = "player_id", nullable = false)
     private Integer playerId;
 
-    @Column(name = "match_number", nullable = false)
+    @JoinColumns({
+            @JoinColumn(name = "match_number", referencedColumnName = "number"),
+            @JoinColumn(name = "game_id", referencedColumnName = "game_id")
+    })
+    private MatchId matchId;
+
+    /*@Column(name = "match_number", nullable = false)
     private Integer matchNumber;
 
     @Column(name = "game_id", nullable = false, length = 10)
-    private String gameId;
+    private String gameId;*/
 
     public Integer getPlayerId() {
         return playerId;
@@ -26,7 +34,7 @@ public class PlayerScoreId implements Serializable {
         this.playerId = playerId;
     }
 
-    public Integer getMatchNumber() {
+    /*public Integer getMatchNumber() {
         return matchNumber;
     }
 
@@ -40,21 +48,7 @@ public class PlayerScoreId implements Serializable {
 
     public void setGameId(String gameId) {
         this.gameId = gameId;
-    }
+    }*/
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PlayerScoreId entity = (PlayerScoreId) o;
-        return Objects.equals(this.gameId, entity.gameId) &&
-                Objects.equals(this.matchNumber, entity.matchNumber) &&
-                Objects.equals(this.playerId, entity.playerId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(gameId, matchNumber, playerId);
-    }
 
 }

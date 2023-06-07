@@ -66,19 +66,19 @@ public abstract class AbstractDataScope implements AutoCloseable {
 		// TODO Auto-generated method stub
 		if (isMine) {
 			if(threadLocal.get().ok && voted)  {
-			threadLocal.get().em.getTransaction().commit();
-		   }
-	       else
-	    	   threadLocal.get().em.getTransaction().rollback(); 	
-		threadLocal.get().em.close();
-		threadLocal.get().ef.close();
-		threadLocal.remove();
+				threadLocal.get().em.getTransaction().commit();
+		   	}
+	       	else {
+				threadLocal.get().em.getTransaction().rollback();
+		   	}
+			threadLocal.get().em.close();
+			threadLocal.get().ef.close();
+			threadLocal.remove();
 		//ou:
 		//threadLocal.set(null);
-	  }
-	  else
-		  if (!voted)
-			  cancelWork();
+		}
+		else if (!voted)
+			cancelWork();
 			  
    }
 		

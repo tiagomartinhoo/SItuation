@@ -21,6 +21,7 @@ import jakarta.persistence.*;
 
 import entityManagerFactory.EnvironmentalEntityManagerFactory;
 import model.Game;
+import org.glassfish.jaxb.core.v2.TODO;
 
 /**
  * Hello world!
@@ -93,5 +94,13 @@ public class BLService
             em.close();
 //            emf.close();
         }
+    }
+
+    public void banUser(int id) {
+        //TODO
+    }
+
+    public void deactivateUser(int id) {
+        //TODO
     }
 }

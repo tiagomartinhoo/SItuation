@@ -2,85 +2,81 @@ package dal;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
-import model.Game;
+import model.Player;
 
-public class MapperGame implements IMapper <Game, String> {
-
-    public String create(Game a) throws Exception {
+public class MapperPlayer implements IMapper <Player, Integer>  {
+    @Override
+    public Integer create(Player e) throws Exception {
         try (DataScope ds = new DataScope()) {
 
             EntityManager em = ds.getEntityManager();
             //em.getTransaction().begin();
-            em.persist(a);
+            em.persist(e);
             ds.validateWork();
-            return a.getId();
+            return e.getId();
 //            if(a.getNumal() != 1221L)
 //                ds.validateWork();
 //            return a.getNumal();
 
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
+        } catch(Exception ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
         }
     }
 
-    public Game read(String id) throws Exception {
+    @Override
+    public Player read(Integer id) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
-            Game g = em.find(Game.class, id, LockModeType.OPTIMISTIC);
+            Player p = em.find(Player.class, id, LockModeType.OPTIMISTIC);
             ds.validateWork();
-            return g;
-//            Aluno a =  em.find(Aluno.class, id,LockModeType.PESSIMISTIC_READ );
-//            ds.validateWork();
-//            return a;
-
+            return p;
         } catch(Exception e) {
             System.out.println(e.getMessage());
             throw e;
         }
     }
 
-    public void update(Game g) throws Exception {
+    @Override
+    public void update(Player e) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             em.flush();  // É necessário para o próximo find encontrar o registo caso ele tenha sido criado neste transação
-            Game g1 = em.find(Game.class, g.getId(), LockModeType.WRITE);
-            if(g1 == null)
+            Player p1 = em.find(Player.class, e.getId(), LockModeType.WRITE);
+            if(p1 == null)
                 throw new java.lang.IllegalAccessException("Entidade inexistente");
 
-            g1.setGName(g.getGName());
-            g1.setUrl(g.getUrl());
+            // Set values of persistent data (except id)
+            p1.setEmail(e.getEmail());
+            p1.setActivityState(e.getActivityState());
+            p1.setUsername(e.getUsername());
+            p1.setRegionName(e.getRegionName());
 
-//            Aluno a1 = em.find(Aluno.class, a.getNumal(),LockModeType.PESSIMISTIC_WRITE );
-//            if (a1 == null)
-//                throw new java.lang.IllegalAccessException("Entidade inexistente");
-//            a1.setNomeal(a.getNomeal());
-//            a1.setHobbies(a.getHobbies());
             ds.validateWork();
 
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
+        } catch(Exception ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
         }
-
     }
 
-    public void delete(Game g) throws Exception {
+    @Override
+    public void delete(Player e) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             em.flush(); // É necessário para o próximo find encontrar o registo caso ele tenha sido criado neste transação
 
-            Game g1 = em.find(Game.class, g.getId(), LockModeType.PESSIMISTIC_WRITE);
-            if (g1 == null)
+            Player p1 = em.find(Player.class, e.getId(), LockModeType.PESSIMISTIC_WRITE);
+            if (p1 == null)
                 throw new java.lang.IllegalAccessException("Entidade inexistente");
-            em.remove(g1);
+            em.remove(p1);
 
             ds.validateWork();
 
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
+        } catch(Exception ex) {
+            System.out.println(ex.getMessage());
+            throw ex;
         }
     }
 }

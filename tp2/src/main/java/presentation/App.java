@@ -22,6 +22,7 @@ import businessLogic.*;
 import java.util.ArrayList;
 
 
+import dal.DataScope;
 import model.*;
 
 
@@ -32,24 +33,115 @@ import model.*;
 
 public class App 
 {
-	protected interface ITest {
-		void test();
-	}
 	
    @SuppressWarnings("unchecked")
-	public static void main( String[] args ) throws Exception
-   {   BLService srv = new BLService();
+	public static void main( String[] args ) throws Exception {
+		start();
+   	}
 
-   	ITest tests[] = new ITest[] {
-         () -> {try { srv.test1(); } catch(Exception e) {}}
-         , () -> {try { srv.test2(); } catch(Exception e) { e.printStackTrace();}}
-      };
-   	
-   	Scanner imp = new Scanner(System.in );
-   	System.out.printf("Escolha um teste (1-%d)? ",tests.length);
-   	int option = imp.nextInt();
-   	if (option >= 1 && option <= tests.length)
-   		tests[--option].test();
+	public static void start() {
+		try(DataScope ds = new DataScope()) {
+			BLService services = new BLService();
+			while (true) {
+				printCommands();
+				int opt = readOption();
+				if (opt == 9) break;
+				option(opt, services);
+			}
+			confirmTransaction();
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage());
+		}
+	}
 
-   }
+	public static void printCommands() {
+		System.out.println("Commands: \n");
+		System.out.println("1.Create/Ban/Deactivate player"); //d
+		System.out.println("2.Get total points for player"); //e
+		System.out.println("3.Get amount of games played for player"); //f
+		System.out.println("4.Get total points for game per player");//g
+		System.out.println("5.Associate badge");//h
+		System.out.println("6.Chat options");//i, j, k
+		System.out.println("7.Get total player info");//l
+		System.out.println("8. Associate badge without procedure");
+//        System.out.println("8.Send message in chat");//
+		System.out.println("9.Exit");
+		printPrompt();
+	}
+
+	private static void confirmTransaction() {
+		System.out.println("Would you like to commit changes? (Y/N)");
+		printPrompt();
+
+		String opt = new Scanner(System.in).nextLine().toUpperCase();
+		try ( DataScope ds = new DataScope()) {
+			if(opt == "Y")
+				ds.validateWork();  // Set work as valid, which means it commits on main DataScope instance close
+			else {
+				ds.cancelWork(); // Likewise cancelWork makes it rollback
+			}
+		} catch(Exception ex) {
+			System.out.println(ex.getMessage());
+		}
+	}
+
+	public static void option(Integer number, BLService services) {
+		Scanner scanner = new Scanner(System.in);
+		switch (number) {
+			case 1: {
+				System.out.println("1. Create a player");
+				System.out.println("2. Ban player");
+				System.out.println("3. Deactivate player");
+				int opt = readOption();
+				switch (opt) {
+					case 1: {
+						//TODO: USER CREATION INPUTS
+						break;
+					}
+					case 2: {
+						System.out.print("Insert player id to ban: ");
+						int id = scanner.nextInt();
+						services.banUser(id);
+					}
+					case 3: {
+						System.out.print("Insert player id to deactivate: ");
+						int id = scanner.nextInt();
+						services.deactivateUser(id);
+					}
+				}
+				break;
+			}
+			case 2: {
+
+				break;
+			}
+			case 3: {
+				break;
+			}
+			case 4: {
+				break;
+			}
+			case 5: {
+				break;
+			}
+			case 6: {
+				break;
+			}
+			case 7: {
+				break;
+			}
+			case 8: {
+				break;
+			}
+		}
+	}
+
+	public static int readOption() {
+		return new Scanner(System.in).nextInt();
+	}
+
+	public static void printPrompt() {
+		System.out.print(">");
+	}
 }
+

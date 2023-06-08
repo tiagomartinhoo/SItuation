@@ -80,35 +80,57 @@ public class BLService
 
     public boolean associateBadgeWithoutProc(int pId, String gId, String badge) {
         try {
-            // This should all belong to a RepositoryPlayerBadge but me lazy rn
-            RepositoryPlayer playerRepo = new RepositoryPlayer();
-
-            Player p = playerRepo.find(pId);
-            System.out.println(p);
-
-            RepositoryGame gameRepo = new RepositoryGame();
-
-            Game g = gameRepo.find(gId);
-            System.out.println(g);
-
             RepositoryBadge badgeRepo = new RepositoryBadge();
 
-            Badge b = badgeRepo.find(badge);
+            Badge b = badgeRepo.find(badge, gId); //Obtain badge information
 
-            MapperPlayerBadge mapper = new MapperPlayerBadge();
-            PlayerBadge pb = new PlayerBadge();
-            PlayerBadgeId pbId = new PlayerBadgeId();
-            pbId.setPlayerId(p.getId());
-            pbId.setBadgeId(b.getId());
-            pb.setPlayer(p);
-            pb.setBadge(b);
-            pb.setId(pbId);
+            RepositoryPlayer playerRepo = new RepositoryPlayer();
 
-            mapper.create(pb);
+            long points = playerRepo.totalPlayerPointsInGame(pId, gId);
+
+            if (points == -1){
+                System.out.println("Couldn't find specified user");
+                return false;
+            }
+            if(b == null) {
+                System.out.println("Couldn't find specified badge");
+                return false;
+            }
+            if(points < b.getPointsLimit()) {
+                System.out.println("User does not have enough points for this badge");
+                return false;
+            }
+
+            RepositoryPlayerBadge repo = new RepositoryPlayerBadge();
+
+            repo.add(pId, gId, badge);
             return true;
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
         return false;
     }
+
+    public void sendMessage(int pId, int cId, String msg) {
+        try {
+            MapperChatLookup clM = new MapperChatLookup();
+            ChatLookupId clId = new ChatLookupId();
+            clId.setChatId(cId);
+            clId.setPlayerId(pId);
+
+            // If this throws IllegalAccessException, then user does not have
+            // access to the chat
+            clM.read(clId);
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            repo.sendMessage(pId, cId, msg);
+
+        } catch (IllegalAccessException ex) {
+            System.out.println("User does not have access to that chat");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
 }

@@ -5,10 +5,10 @@ import jakarta.persistence.StoredProcedureParameter;
 
 @Entity
 @Table(name = "player_badge")
-@NamedNativeQuery(
-        name = "associateBadge",
-        query = "call associarCrachá( ? , ?, ? )"
-)
+@NamedQueries({
+        @NamedQuery(name = "PlayerBadge.findAll", query="SELECT p FROM PlayerBadge p"),
+        @NamedQuery(name = "PlayerBadge.findByPlayer", query = "SELECT p FROM PlayerBadge p where p.id.playerId = ?1")
+})
 public class PlayerBadge {
     @EmbeddedId
     private PlayerBadgeId id;

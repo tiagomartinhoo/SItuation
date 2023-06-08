@@ -20,18 +20,20 @@ public class PlayerScoreId implements Serializable {
     })
     private MatchId matchId;
 
-    /*@Column(name = "match_number", nullable = false)
-    private Integer matchNumber;
-
-    @Column(name = "game_id", nullable = false, length = 10)
-    private String gameId;*/
-
     public Integer getPlayerId() {
         return playerId;
     }
 
     public void setPlayerId(Integer playerId) {
         this.playerId = playerId;
+    }
+
+    public MatchId getMatchId() {
+        return matchId;
+    }
+
+    public void setMatchId(MatchId matchId) {
+        this.matchId = matchId;
     }
 
     /*public Integer getMatchNumber() {

@@ -3,11 +3,12 @@ package dal;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import model.Badge;
+import model.BadgeId;
 import model.Game;
 
 import java.util.List;
 
-public class RepositoryBadge implements IRepository <Badge, String> {
+public class RepositoryBadge implements IRepository <Badge, BadgeId> {
     @Override
     public List<Badge> getAll() throws Exception {
         try (DataScope ds = new DataScope()) {
@@ -23,18 +24,20 @@ public class RepositoryBadge implements IRepository <Badge, String> {
     }
 
     @Override
-    public Badge find(String k) throws Exception {
-        try (DataScope ds = new DataScope()) {
-            EntityManager em = ds.getEntityManager();
-            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
-            // com queries o flush � feito automaticamente.
-            Badge b = em.createNamedQuery("Badge.findByName", Badge.class)
-                    .setParameter(1, k)
-                    .setLockMode(LockModeType.PESSIMISTIC_READ)
-                    .getSingleResult();
-            ds.validateWork();
-            return b;
-        }
+    public Badge find(BadgeId k) throws Exception {
+        MapperBadge m = new MapperBadge();
+
+        return m.read(k);
+    }
+
+
+    public Badge find(String bName, String gId) throws Exception {
+        BadgeId id = new BadgeId();
+
+        id.setGameId(gId);
+        id.setBName(bName);
+        System.out.println(gId + " " + bName);
+        return find(id);
     }
 
     @Override

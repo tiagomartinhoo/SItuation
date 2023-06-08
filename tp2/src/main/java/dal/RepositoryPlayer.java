@@ -29,6 +29,27 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
         }
     }
 
+    public long totalPlayerPointsInGame(Integer pId, String gId) throws Exception {
+
+        try (DataScope ds = new DataScope()) {
+            EntityManager em = ds.getEntityManager();
+            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
+            // com queries o flush � feito automaticamente.
+            Query q = em.createQuery("SELECT SUM(p.score) FROM PlayerScore p" +
+                    " WHERE p.id.playerId = ?1 AND p.id.matchId.gameId = ?2", Integer.class);
+
+
+            q.setParameter(1, pId).setParameter(2, gId);
+
+            Long points = (Long) q.getSingleResult();
+
+            ds.validateWork();
+            return points;
+        }
+
+
+    }
+
     public Player find(Integer Id) throws Exception {
         MapperPlayer m = new MapperPlayer();
 
@@ -86,8 +107,25 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
                     .executeUpdate();
             em.getTransaction().commit();
             em.close();
-            
+
             return true;
+        }
+    }
+
+    public void sendMessage(int pId, int cId, String msg) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManagerFactory ef = ds.getEntityManagerFactory();
+            EntityManager em = ef.createEntityManager();
+            em.getTransaction().begin();
+
+            Query q = em.createNativeQuery("call enviarMensagem( ? , ? , ? )");
+
+            q.setParameter(1, pId)
+                    .setParameter(2, cId)
+                    .setParameter(3, msg)
+                    .executeUpdate();
+            em.getTransaction().commit();
+            em.close();
         }
     }
 }

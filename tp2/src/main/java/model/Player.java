@@ -7,6 +7,7 @@ import jakarta.persistence.*;
         @Index(name = "player_username_key", columnList = "username", unique = true),
         @Index(name = "player_email_key", columnList = "email", unique = true)
 })
+@NamedQuery(name = "Player.findAll", query="SELECT p FROM Player p")
 public class Player {
     @Id
     @Column(name = "id", nullable = false)

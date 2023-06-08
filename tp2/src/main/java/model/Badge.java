@@ -4,10 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "badge")
-@NamedQueries({
-        @NamedQuery(name="Badge.findAll", query="SELECT b FROM Badge b"),
-        @NamedQuery(name = "Badge.findByName", query="SELECT b FROM Badge b where b.id.bName = ?1")
-})
+@NamedQuery(name="Badge.findAll", query="SELECT b FROM Badge b")
 public class Badge {
     @EmbeddedId
     private BadgeId id;

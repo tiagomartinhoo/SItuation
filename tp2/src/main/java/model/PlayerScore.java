@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "player_score")
+@NamedQuery(name = "PlayerScore.findByPlayer", query = "SELECT s FROM PlayerScore s where s.id.playerId = ?1")
 public class PlayerScore {
     @EmbeddedId
     private PlayerScoreId id;

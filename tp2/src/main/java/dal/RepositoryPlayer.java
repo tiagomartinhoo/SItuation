@@ -1,22 +1,29 @@
 package dal;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
+import jakarta.persistence.*;
 import model.Player;
 
 import java.util.List;
 
 public class RepositoryPlayer implements IRepository <Player, Integer> {
 
-    public void banPlayer(Integer id) {
+
+    public int totalPlayerPoints(Integer id) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
             // com queries o flush � feito automaticamente.
-            List<Player> l = em.createStoredProcedureQuery("Call banUser(" + id + ")").getSingleResult();
+            StoredProcedureQuery q = em.createStoredProcedureQuery("totalPontosJogador", Integer.class)
+                    .registerStoredProcedureParameter(1, Integer.class, ParameterMode.OUT)
+                    .registerStoredProcedureParameter(2, Integer.class, ParameterMode.IN);
+
+            q.setParameter(2, id).execute();
+            Integer points = (Integer) q.getOutputParameterValue(1);
+//            int points = (Integer) em.createNativeQuery("SELECT * FROM totalPontosJogador(" + id +")", Player.class)
+//                    .getSingleResult();
 
             ds.validateWork();
-            return l;
+            return points;
         }
         catch(Exception e) {
             System.out.println(e.getMessage());

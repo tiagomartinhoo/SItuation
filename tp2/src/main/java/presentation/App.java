@@ -113,7 +113,10 @@ public class App
 				break;
 			}
 			case 2: {
-
+				System.out.println("Insert player id to obtain points: ");
+				int id = scanner.nextInt();
+				int p = services.totalUserPoints(id);
+				System.out.println("Player with id: " + id + " has a total of " + p + " points");
 				break;
 			}
 			case 3: {

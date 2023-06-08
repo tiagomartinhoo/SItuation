@@ -17,6 +17,7 @@ import java.util.List;
 
 import dal.DataScope;
 import dal.RepositoryGame;
+import dal.RepositoryPlayer;
 import jakarta.persistence.*;
 
 import entityManagerFactory.EnvironmentalEntityManagerFactory;
@@ -30,10 +31,9 @@ import org.glassfish.jaxb.core.v2.TODO;
 public class BLService 
 {
     //@SuppressWarnings("unchecked")
-	public void test1() throws Exception {
+	public void test1() {
 
         try (DataScope ds = new DataScope()) { // Automatically calls DataScope.close() so no need to manage that
-            EntityManager em = ds.getEntityManager();
 
             RepositoryGame gameRepo = new RepositoryGame();
 
@@ -42,58 +42,10 @@ public class BLService
             for (Game game: games) {
                 System.out.println(game.getId() + ": " + game.getGName() + " " + game.getUrl());
             }
-        }
-        catch(Exception e)
-        {
+        } catch(Exception e) {
         	System.out.println(e.getMessage());
-        	throw e;
         }
 
-    }
-
-    @SuppressWarnings("preview")
-    public void test2() throws Exception
-    { //
-        EntityManager em = EnvironmentalEntityManagerFactory.createEntityManager("JPAEx");
-//        EntityManagerFactory emf = Persistence.createEntityManagerFactory("JPAEx");
-//        System.out.println("PROPERTIES");
-//        System.out.println(emf.getProperties().size());
-//        System.out.println(emf.getProperties().toString());
-//
-//        EntityManager em = emf.createEntityManager();
-        try
-        {
-//            System.out.println("Ler um cacifo");
-//            EntityTransaction trans = em.getTransaction();
-//
-//            trans.begin();
-//
-//            String sql = "SELECT c FROM Cacifo c WHERE c.numCac = 3";
-//            Query query = em.createQuery(sql);
-//            List<Cacifo> la = query.getResultList();
-//
-//            for (Cacifo c : la)
-//            {
-//                System.out.printf("%d \n", c.getNumCac());
-//                System.out.printf("%s \n", c.getDescrCac());
-//                System.out.printf("%s \n", c.getAluno().getNomeal());
-//
-//                c.setDescrCac("Test");
-//                System.out.printf("%s \n", c.getDescrCac());
-//            }
-//
-//            trans.commit();
-        }
-        catch(Exception e)
-        {
-            System.out.println(e.getMessage());
-            throw e;
-        }
-        finally
-        {
-            em.close();
-//            emf.close();
-        }
     }
 
     public void banUser(int id) {
@@ -102,5 +54,17 @@ public class BLService
 
     public void deactivateUser(int id) {
         //TODO
+    }
+
+    public int totalUserPoints(int id) {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            return repo.totalPlayerPoints(id);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
     }
 }

@@ -15,13 +15,11 @@ package businessLogic;
 
 import java.util.List;
 
-import dal.DataScope;
-import dal.RepositoryGame;
-import dal.RepositoryPlayer;
+import dal.*;
 import jakarta.persistence.*;
 
 import entityManagerFactory.EnvironmentalEntityManagerFactory;
-import model.Game;
+import model.*;
 import org.glassfish.jaxb.core.v2.TODO;
 
 /**
@@ -66,5 +64,51 @@ public class BLService
             System.out.println(e.getMessage());
             return -1;
         }
+    }
+
+    public boolean associateBadgeWithProc(int pId, String gId, String badge) {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            return repo.associateBadge(pId, gId, badge);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean associateBadgeWithoutProc(int pId, String gId, String badge) {
+        try {
+            // This should all belong to a RepositoryPlayerBadge but me lazy rn
+            RepositoryPlayer playerRepo = new RepositoryPlayer();
+
+            Player p = playerRepo.find(pId);
+            System.out.println(p);
+
+            RepositoryGame gameRepo = new RepositoryGame();
+
+            Game g = gameRepo.find(gId);
+            System.out.println(g);
+
+            RepositoryBadge badgeRepo = new RepositoryBadge();
+
+            Badge b = badgeRepo.find(badge);
+
+            MapperPlayerBadge mapper = new MapperPlayerBadge();
+            PlayerBadge pb = new PlayerBadge();
+            PlayerBadgeId pbId = new PlayerBadgeId();
+            pbId.setPlayerId(p.getId());
+            pbId.setBadgeId(b.getId());
+            pb.setPlayer(p);
+            pb.setBadge(b);
+            pb.setId(pbId);
+
+            mapper.create(pb);
+            return true;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
     }
 }

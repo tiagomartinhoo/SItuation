@@ -1,9 +1,14 @@
 package model;
 
 import jakarta.persistence.*;
+import jakarta.persistence.StoredProcedureParameter;
 
 @Entity
 @Table(name = "player_badge")
+@NamedNativeQuery(
+        name = "associateBadge",
+        query = "call associarCrachá( ? , ?, ? )"
+)
 public class PlayerBadge {
     @EmbeddedId
     private PlayerBadgeId id;

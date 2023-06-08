@@ -2,67 +2,64 @@ package dal;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
-import model.Badge;
-import model.BadgeId;
+import model.Game;
+import model.PlayerScore;
+import model.PlayerScoreId;
 
-
-
-public class MapperBadge  implements IMapper <Badge, BadgeId> {
-
+public class MapperPlayerScore implements IMapper<PlayerScore, PlayerScoreId> {
     @Override
-    public BadgeId create(Badge e) throws Exception {
+    public PlayerScoreId create(PlayerScore e) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
 
             em.persist(e);
             ds.validateWork();
-
             return e.getId();
         }
     }
 
     @Override
-    public Badge read(BadgeId k) throws Exception {
+    public PlayerScore read(PlayerScoreId k) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
-            Badge b = em.find(Badge.class, k, LockModeType.PESSIMISTIC_READ);
-            ds.validateWork();
-            return b;
 
+            em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
+            PlayerScore s = em.find(PlayerScore.class, k, LockModeType.PESSIMISTIC_READ);
+            ds.validateWork();
+            return s;
         }
     }
 
     @Override
-    public void update(Badge e) throws Exception {
+    public void update(PlayerScore e) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             em.flush();  // É necessário para o próximo find encontrar o registo caso ele tenha sido criado neste transação
-            Badge b = em.find(Badge.class, e.getId(), LockModeType.PESSIMISTIC_READ);
-            if(b == null)
+
+            PlayerScore s = em.find(PlayerScore.class, e.getId(), LockModeType.WRITE);
+            if(s == null)
                 throw new java.lang.IllegalAccessException("Entidade inexistente");
 
-            b.setUrl(e.getUrl());
-            b.setPointsLimit(e.getPointsLimit());
+            s.setScore(e.getScore());
+            s.setMatch(e.getMatch());
 
             ds.validateWork();
-
         }
     }
 
     @Override
-    public void delete(Badge e) throws Exception {
+    public void delete(PlayerScore e) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             em.flush(); // É necessário para o próximo find encontrar o registo caso ele tenha sido criado neste transação
 
-            Badge b = em.find(Badge.class, e.getId(), LockModeType.PESSIMISTIC_READ);
-            if (b == null)
+            PlayerScore s = em.find(PlayerScore.class, e.getId(), LockModeType.PESSIMISTIC_WRITE);
+            if (s == null)
                 throw new java.lang.IllegalAccessException("Entidade inexistente");
-            em.remove(b);
+
+            em.remove(s);
 
             ds.validateWork();
-
         }
     }
 }

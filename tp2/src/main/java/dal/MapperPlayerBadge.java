@@ -20,9 +20,6 @@ public class MapperPlayerBadge implements IMapper <PlayerBadge, PlayerBadgeId>  
 //                ds.validateWork();
 //            return a.getNumal();
 
-        } catch(Exception ex) {
-            System.out.println(ex.getMessage());
-            throw ex;
         }
     }
 
@@ -31,12 +28,9 @@ public class MapperPlayerBadge implements IMapper <PlayerBadge, PlayerBadgeId>  
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
-            PlayerBadge p = em.find(PlayerBadge.class, id, LockModeType.OPTIMISTIC);
+            PlayerBadge p = em.find(PlayerBadge.class, id, LockModeType.PESSIMISTIC_WRITE);
             ds.validateWork();
             return p;
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
         }
     }
 
@@ -53,10 +47,6 @@ public class MapperPlayerBadge implements IMapper <PlayerBadge, PlayerBadgeId>  
             p1.setBadge(e.getBadge());
 
             ds.validateWork();
-
-        } catch(Exception ex) {
-            System.out.println(ex.getMessage());
-            throw ex;
         }
     }
 
@@ -72,10 +62,6 @@ public class MapperPlayerBadge implements IMapper <PlayerBadge, PlayerBadgeId>  
             em.remove(p1);
 
             ds.validateWork();
-
-        } catch(Exception ex) {
-            System.out.println(ex.getMessage());
-            throw ex;
         }
     }
 }

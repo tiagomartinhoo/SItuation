@@ -18,9 +18,6 @@ public class MapperPlayer implements IMapper <Player, Integer>  {
 //                ds.validateWork();
 //            return a.getNumal();
 
-        } catch(Exception ex) {
-            System.out.println(ex.getMessage());
-            throw ex;
         }
     }
 
@@ -29,12 +26,9 @@ public class MapperPlayer implements IMapper <Player, Integer>  {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
-            Player p = em.find(Player.class, id, LockModeType.PESSIMISTIC_READ);
+            Player p = em.find(Player.class, id, LockModeType.PESSIMISTIC_WRITE);
             ds.validateWork();
             return p;
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
         }
     }
 
@@ -55,9 +49,6 @@ public class MapperPlayer implements IMapper <Player, Integer>  {
 
             ds.validateWork();
 
-        } catch(Exception ex) {
-            System.out.println(ex.getMessage());
-            throw ex;
         }
     }
 
@@ -74,9 +65,6 @@ public class MapperPlayer implements IMapper <Player, Integer>  {
 
             ds.validateWork();
 
-        } catch(Exception ex) {
-            System.out.println(ex.getMessage());
-            throw ex;
         }
     }
 }

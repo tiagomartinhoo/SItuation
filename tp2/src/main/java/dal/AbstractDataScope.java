@@ -59,7 +59,7 @@ public abstract class AbstractDataScope implements AutoCloseable {
 	//Para podermos usar diretamente JPA
 	public EntityManager getEntityManager() {return threadLocal.get().em;}
 
-
+	public EntityManagerFactory getEntityManagerFactory() {return threadLocal.get().ef;}
 
 	@Override
 	public void close() throws Exception {

@@ -19,7 +19,6 @@ public class MapperGame implements IMapper <Game, String> {
 //            return a.getNumal();
 
         } catch(Exception e) {
-            System.out.println(e.getMessage());
             throw e;
         }
     }
@@ -28,7 +27,7 @@ public class MapperGame implements IMapper <Game, String> {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
-            Game g = em.find(Game.class, id, LockModeType.OPTIMISTIC);
+            Game g = em.find(Game.class, id, LockModeType.PESSIMISTIC_READ);
             ds.validateWork();
             return g;
 //            Aluno a =  em.find(Aluno.class, id,LockModeType.PESSIMISTIC_READ );
@@ -36,7 +35,6 @@ public class MapperGame implements IMapper <Game, String> {
 //            return a;
 
         } catch(Exception e) {
-            System.out.println(e.getMessage());
             throw e;
         }
     }
@@ -60,7 +58,6 @@ public class MapperGame implements IMapper <Game, String> {
             ds.validateWork();
 
         } catch(Exception e) {
-            System.out.println(e.getMessage());
             throw e;
         }
 
@@ -79,7 +76,6 @@ public class MapperGame implements IMapper <Game, String> {
             ds.validateWork();
 
         } catch(Exception e) {
-            System.out.println(e.getMessage());
             throw e;
         }
     }

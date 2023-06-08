@@ -2,6 +2,8 @@ package dal;
 
 import jakarta.persistence.*;
 import model.Player;
+import org.eclipse.persistence.queries.StoredFunctionCall;
+import org.postgresql.core.NativeQuery;
 
 import java.util.List;
 
@@ -25,21 +27,12 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
             ds.validateWork();
             return points;
         }
-        catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
-        }
     }
 
     public Player find(Integer Id) throws Exception {
         MapperPlayer m = new MapperPlayer();
 
-        try {
-            return m.read(Id);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
-        }
+        return m.read(Id);
     }
 
 
@@ -50,15 +43,11 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
             EntityManager em = ds.getEntityManager();
             //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
             // com queries o flush � feito automaticamente.
-            List<Player> l = em.createNamedQuery("Game.findAll",Player.class)
+            List<Player> l = em.createNamedQuery("Game.findAll", Player.class)
                     .setLockMode(LockModeType.PESSIMISTIC_READ)
                     .getResultList();
             ds.validateWork();
             return l;
-        }
-        catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
         }
     }
 
@@ -66,38 +55,45 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
     public void add(Player a) throws Exception {
         MapperPlayer m = new MapperPlayer();
 
-        try {
-            m.create(a);
-
-        }
-        catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
-        }
+        m.create(a);
     }
 
 
 
     public void save(Player a) throws Exception {
         MapperPlayer m = new MapperPlayer();
-
-        try {
-            m.update(a);
-        }
-        catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
-        }
+        m.update(a);
     }
 
     public void delete(Player a) throws Exception {
         MapperPlayer m = new MapperPlayer();
 
-        try {
-            m.delete(a);;
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            throw e;
+        m.delete(a);;
+
+    }
+
+    public boolean associateBadge(int pId, String gId, String badge) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManager em = ds.getEntityManager();
+
+
+//            Query q1 = em.createNativeQuery("call associarCrachá(?1 , ?2 , ?3)");
+
+//             StoredProcedureQuery q = em.createStoredProcedureQuery("associarCrachá", void.class, void.class)
+//                    .registerStoredProcedureParameter(1, Integer.class, ParameterMode.IN)
+//                    .registerStoredProcedureParameter(2, String.class, ParameterMode.IN)
+//                    .registerStoredProcedureParameter(3, String.class, ParameterMode.IN);
+
+            Query q = em.createNamedQuery("associateBadge");
+
+            q.setParameter(1, pId)
+                    .setParameter(2, gId)
+                    .setParameter(3, badge)
+                    .executeUpdate();
+
+
+            ds.validateWork();
+            return true;
         }
     }
 }

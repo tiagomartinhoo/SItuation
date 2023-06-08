@@ -77,12 +77,7 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
             EntityManagerFactory ef = ds.getEntityManagerFactory();
             EntityManager em = ef.createEntityManager();
             em.getTransaction().begin();
-//            Query q1 = em.createNativeQuery("call associarCrachá(?1 , ?2 , ?3)");
 
-//             StoredProcedureQuery q = em.createStoredProcedureQuery("associarCrachá")
-//                    .registerStoredProcedureParameter(1, Integer.class, ParameterMode.IN)
-//                    .registerStoredProcedureParameter(2, String.class, ParameterMode.IN)
-//                    .registerStoredProcedureParameter(3, String.class, ParameterMode.IN);
             Query q = em.createNativeQuery("call associarCrachá( ? , ? , ? )");
 
             q.setParameter(1, pId)
@@ -90,10 +85,8 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
                     .setParameter(3, badge)
                     .executeUpdate();
             em.getTransaction().commit();
-//                    ;
-//            q.getSingleResult();
-//            em.flush();
-            ds.validateWork();
+            em.close();
+            
             return true;
         }
     }

@@ -35,6 +35,14 @@ public class PlayerBadgeId implements Serializable {
         this.playerId = playerId;
     }
 
+    public BadgeId getBadgeId() {
+        return badgeId;
+    }
+
+    public void setBadgeId(BadgeId badgeId) {
+        this.badgeId = badgeId;
+    }
+
     /*public String getBName() {
         return bName;
     }

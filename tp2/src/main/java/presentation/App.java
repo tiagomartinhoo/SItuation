@@ -40,6 +40,7 @@ public class App
    	}
 
 	public static void start() {
+	   // Top-level DataScope, is in charge of commit/rollback
 		try(DataScope ds = new DataScope()) {
 			BLService services = new BLService();
 			while (true) {
@@ -75,7 +76,7 @@ public class App
 
 		String opt = new Scanner(System.in).nextLine().toUpperCase();
 		try ( DataScope ds = new DataScope()) {
-			if(opt == "Y")
+			if(opt.equals("Y"))
 				ds.validateWork();  // Set work as valid, which means it commits on main DataScope instance close
 			else {
 				ds.cancelWork(); // Likewise cancelWork makes it rollback

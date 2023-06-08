@@ -8,6 +8,22 @@ import java.util.List;
 
 public class RepositoryPlayer implements IRepository <Player, Integer> {
 
+    public void banPlayer(Integer id) {
+        try (DataScope ds = new DataScope()) {
+            EntityManager em = ds.getEntityManager();
+            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
+            // com queries o flush � feito automaticamente.
+            List<Player> l = em.createStoredProcedureQuery("Call banUser(" + id + ")").getSingleResult();
+
+            ds.validateWork();
+            return l;
+        }
+        catch(Exception e) {
+            System.out.println(e.getMessage());
+            throw e;
+        }
+    }
+
     public Player find(Integer Id) throws Exception {
         MapperPlayer m = new MapperPlayer();
 

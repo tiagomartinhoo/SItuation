@@ -45,7 +45,7 @@ public class App
 			BLService services = new BLService();
 			while (true) {
 				printCommands();
-				int opt = readOption();
+				int opt = readOption(new Scanner(System.in));
 				if (opt == 9) break;
 				option(opt, services);
 			}
@@ -53,6 +53,20 @@ public class App
 		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
+	}
+
+	private static void confirmTransaction(DataScope ds) {
+		System.out.println("Would you like to commit changes? (Y/N)");
+		printPrompt();
+
+		String opt = new Scanner(System.in).nextLine().toUpperCase();
+
+		if(opt.equalsIgnoreCase("Y"))
+			ds.validateWork();  // Set work as valid, which means it commits on main DataScope instance close
+		else {
+			ds.cancelWork(); // Likewise cancelWork makes it rollback
+		}
+
 	}
 
 	public static void printCommands() {
@@ -70,94 +84,100 @@ public class App
 		printPrompt();
 	}
 
-	private static void confirmTransaction(DataScope ds) {
-		System.out.println("Would you like to commit changes? (Y/N)");
-		printPrompt();
-
-		String opt = new Scanner(System.in).nextLine().toUpperCase();
-
-		if(opt.equalsIgnoreCase("Y"))
-			ds.validateWork();  // Set work as valid, which means it commits on main DataScope instance close
-		else {
-			ds.cancelWork(); // Likewise cancelWork makes it rollback
-		}
-
-	}
-
 	public static void option(Integer number, BLService services) {
 		Scanner scanner = new Scanner(System.in);
 		switch (number) {
-			case 1: {
-				System.out.println("1. Create a player");
-				System.out.println("2. Ban player");
-				System.out.println("3. Deactivate player");
-				int opt = readOption();
-				switch (opt) {
-					case 1: {
-						//TODO: USER CREATION INPUTS
-						break;
-					}
-					case 2: {
-						System.out.print("Insert player id to ban: ");
-						int id = scanner.nextInt();
-						services.banUser(id);
-					}
-					case 3: {
-						System.out.print("Insert player id to deactivate: ");
-						int id = scanner.nextInt();
-						services.deactivateUser(id);
-					}
-				}
-				break;
-			}
-			case 2: {
+			case 1 -> playerOptions(services, scanner);
+			case 2 -> {
 				System.out.print("Insert player id to obtain points: ");
 				int id = scanner.nextInt();
 				int p = services.totalUserPoints(id);
 				System.out.println("Player with id: " + id + " has a total of " + p + " points");
-				break;
 			}
-			case 3: {
-				break;
+			case 3 -> {
 			}
-			case 4: {
-				break;
+			case 4 -> {
 			}
-			case 5: {
+			case 5 -> {
 				System.out.print("Player id: ");
 				int pId = scanner.nextInt();
 				System.out.print("Game id: ");
 				String gId = scanner.next();
 				System.out.print("Badge name: ");
 				String badge = scanner.next();
-				if(services.associateBadgeWithProc(pId, gId, badge)) {
+				if (services.associateBadgeWithProc(pId, gId, badge)) {
 					System.out.println("Successfully associated");
-				}else System.out.println("Could not associate");;
-				break;
+				} else System.out.println("Could not associate");
 			}
-			case 6: {
-				break;
+			case 6 -> {
+				chatOptions(services, scanner);
+
 			}
-			case 7: {
-				break;
+			case 7 -> {
 			}
-			case 8: {
+			case 8 -> {
 				System.out.print("Player id: ");
 				int pId = scanner.nextInt();
 				System.out.print("Game id: ");
 				String gId = scanner.next();
 				System.out.print("Badge name: ");
 				String badge = scanner.next();
-				if(services.associateBadgeWithoutProc(pId, gId, badge)) {
+				if (services.associateBadgeWithoutProc(pId, gId, badge)) {
 					System.out.println("Successfully associated");
-				}else System.out.println("Could not associate");;
-				break;
+				} else System.out.println("Could not associate");
 			}
 		}
 	}
 
-	public static int readOption() {
-		return new Scanner(System.in).nextInt();
+	private static void chatOptions(BLService services, Scanner scanner) {
+		System.out.println("1. Iniciar Conversa");
+		System.out.println("2. Juntar a uma Conversa");
+		System.out.println("3. Enviar mensagem para uma Conversa");
+		int opt = readOption(scanner);
+		switch (opt) {
+			case 1 -> {
+			}
+			case 2 -> {
+			}
+			case 3 -> {
+				System.out.print("Player id: ");
+				int pId = scanner.nextInt();
+				System.out.print("Chat id: ");
+				int cId = scanner.nextInt();
+				System.out.print("Message: ");
+				String msg = scanner.next();
+				services.sendMessage(pId, cId, msg);
+			}
+		}
+	}
+
+	private static void playerOptions(BLService services, Scanner scanner) {
+		System.out.println("1. Create a player");
+		System.out.println("2. Ban player");
+		System.out.println("3. Deactivate player");
+		int opt = readOption(scanner);
+		switch (opt) {
+			case 1: {
+				//TODO: USER CREATION INPUTS
+				break;
+			}
+			case 2: {
+				System.out.print("Insert player id to ban: ");
+				int id = scanner.nextInt();
+				services.banUser(id);
+			}
+			case 3: {
+				System.out.print("Insert player id to deactivate: ");
+				int id = scanner.nextInt();
+				services.deactivateUser(id);
+			}
+			default: break;
+		}
+	}
+
+
+	public static int readOption(Scanner scanner) {
+		return scanner.nextInt();
 	}
 
 	public static void printPrompt() {

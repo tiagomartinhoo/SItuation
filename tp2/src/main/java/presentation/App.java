@@ -49,14 +49,14 @@ public class App
 				if (opt == 9) break;
 				option(opt, services);
 			}
-			confirmTransaction();
+			confirmTransaction(ds);
 		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
 	}
 
 	public static void printCommands() {
-		System.out.println("Commands: \n");
+		System.out.println("\nCommands:");
 		System.out.println("1.Create/Ban/Deactivate player"); //d
 		System.out.println("2.Get total points for player"); //e
 		System.out.println("3.Get amount of games played for player"); //f
@@ -70,20 +70,18 @@ public class App
 		printPrompt();
 	}
 
-	private static void confirmTransaction() {
+	private static void confirmTransaction(DataScope ds) {
 		System.out.println("Would you like to commit changes? (Y/N)");
 		printPrompt();
 
 		String opt = new Scanner(System.in).nextLine().toUpperCase();
-		try ( DataScope ds = new DataScope()) {
-			if(opt.equals("Y"))
-				ds.validateWork();  // Set work as valid, which means it commits on main DataScope instance close
-			else {
-				ds.cancelWork(); // Likewise cancelWork makes it rollback
-			}
-		} catch(Exception ex) {
-			System.out.println(ex.getMessage());
+
+		if(opt.equalsIgnoreCase("Y"))
+			ds.validateWork();  // Set work as valid, which means it commits on main DataScope instance close
+		else {
+			ds.cancelWork(); // Likewise cancelWork makes it rollback
 		}
+
 	}
 
 	public static void option(Integer number, BLService services) {
@@ -113,7 +111,7 @@ public class App
 				break;
 			}
 			case 2: {
-				System.out.println("Insert player id to obtain points: ");
+				System.out.print("Insert player id to obtain points: ");
 				int id = scanner.nextInt();
 				int p = services.totalUserPoints(id);
 				System.out.println("Player with id: " + id + " has a total of " + p + " points");
@@ -126,6 +124,15 @@ public class App
 				break;
 			}
 			case 5: {
+				System.out.print("Player id: ");
+				int pId = scanner.nextInt();
+				System.out.print("Game id: ");
+				String gId = scanner.next();
+				System.out.print("Badge name: ");
+				String badge = scanner.next();
+				if(services.associateBadgeWithProc(pId, gId, badge)) {
+					System.out.println("Successfully associated");
+				}else System.out.println("Could not associate");;
 				break;
 			}
 			case 6: {
@@ -135,6 +142,15 @@ public class App
 				break;
 			}
 			case 8: {
+				System.out.print("Player id: ");
+				int pId = scanner.nextInt();
+				System.out.print("Game id: ");
+				String gId = scanner.next();
+				System.out.print("Badge name: ");
+				String badge = scanner.next();
+				if(services.associateBadgeWithoutProc(pId, gId, badge)) {
+					System.out.println("Successfully associated");
+				}else System.out.println("Could not associate");;
 				break;
 			}
 		}

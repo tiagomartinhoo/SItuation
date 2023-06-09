@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 
 import dal.DataScope;
+import dal.IsolationLevel;
 import model.*;
 
 
@@ -44,6 +45,7 @@ public class App
 		try(DataScope ds = new DataScope()) {
 			BLService services = new BLService();
 			while (true) {
+				pickTransLevel(ds);
 				printCommands();
 				int opt = readOption(new Scanner(System.in));
 				if (opt == 9) break;
@@ -52,6 +54,22 @@ public class App
 			confirmTransaction(ds);
 		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
+		}
+	}
+
+	private static void pickTransLevel(DataScope ds) throws Exception {
+		System.out.println("1. READ_UNCOMMITED");
+		System.out.println("2. READ_COMMITED");
+		System.out.println("3. REPEATABLE_READ");
+		System.out.println("4. SERIALIZABLE");
+		System.out.println("Any: default");
+		printPrompt();
+		int opt = readOption(new Scanner(System.in));
+		switch (opt) {
+			case 1 -> ds.setIsolationLevel(IsolationLevel.READ_UNCOMMITED);
+			case 2 -> ds.setIsolationLevel(IsolationLevel.READ_COMMITED);
+			case 3 -> ds.setIsolationLevel(IsolationLevel.REPEATABLE_READ);
+			case 4 -> ds.setIsolationLevel(IsolationLevel.SERIALIZABLE);
 		}
 	}
 

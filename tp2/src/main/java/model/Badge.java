@@ -6,6 +6,11 @@ import jakarta.persistence.*;
 @Table(name = "badge")
 @NamedQuery(name="Badge.findAll", query="SELECT b FROM Badge b")
 public class Badge {
+
+    @Version
+    @Column(name = "version")
+    private Integer version;
+
     @EmbeddedId
     private BadgeId id;
 
@@ -52,4 +57,11 @@ public class Badge {
         this.url = url;
     }
 
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
 }

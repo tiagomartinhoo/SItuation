@@ -125,6 +125,7 @@ BEGIN
         game_id         VARCHAR(10) NOT NULL,
         points_limit    INT,
         url             VARCHAR(100),
+		version			INT,
 
         PRIMARY KEY(b_name, game_id),
         FOREIGN KEY(game_id) REFERENCES game (id),

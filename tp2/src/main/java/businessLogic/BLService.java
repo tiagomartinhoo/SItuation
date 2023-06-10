@@ -133,4 +133,29 @@ public class BLService
         }
     }
 
+    public void increaseBadgePoints(String badge, String gId) {
+        increaseBadgePoints(badge, gId, false);
+    }
+
+    public void increaseBadgePoints(String bName, String gId, boolean optimisticLocking) {
+        try {
+            RepositoryBadge repo = new RepositoryBadge();
+
+            Badge badge = repo.find(bName, gId, optimisticLocking);
+            if(badge == null) {
+                System.out.println("Could not find specified badge");
+                return;
+            }
+            int orig = badge.getPointsLimit();
+            System.out.println("OLD VALUE: " + orig);
+            int newValue = Math.round(orig * 1.2f);
+            System.out.println("NEW VALUE: " + orig * 1.2f);
+
+            badge.setPointsLimit(newValue);
+            repo.save(badge, optimisticLocking);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+    }
 }

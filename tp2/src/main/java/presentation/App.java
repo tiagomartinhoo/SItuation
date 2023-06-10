@@ -13,18 +13,12 @@ acarretar problemas vários, em particular, no que respeita à consistência dos da
 
 package presentation;
 
-import java.util.List;
 import java.util.Scanner;
-import java.util.Set;
 
 import businessLogic.*;
-
-import java.util.ArrayList;
-
-
 import dal.DataScope;
 import dal.IsolationLevel;
-import model.*;
+
 
 
 /**
@@ -35,7 +29,7 @@ import model.*;
 public class App 
 {
 	
-   @SuppressWarnings("unchecked")
+
 	public static void main( String[] args ) throws Exception {
 		start();
    	}
@@ -44,8 +38,8 @@ public class App
 	   // Top-level DataScope, is in charge of commit/rollback
 		try(DataScope ds = new DataScope()) {
 			BLService services = new BLService();
+			pickTransLevel(ds);
 			while (true) {
-				pickTransLevel(ds);
 				printCommands();
 				int opt = readOption(new Scanner(System.in));
 				if (opt == 9) break;
@@ -96,7 +90,7 @@ public class App
 		System.out.println("5.Associate badge");//h
 		System.out.println("6.Chat options");//i, j, k
 		System.out.println("7.Get total player info");//l
-		System.out.println("8. Associate badge without procedure");
+		System.out.println("8. Increase badge points by 20%");
 //        System.out.println("8.Send message in chat");//
 		System.out.println("9.Exit");
 		printPrompt();
@@ -117,15 +111,7 @@ public class App
 			case 4 -> {
 			}
 			case 5 -> {
-				System.out.print("Player id: ");
-				int pId = scanner.nextInt();
-				System.out.print("Game id: ");
-				String gId = scanner.next();
-				System.out.print("Badge name: ");
-				String badge = scanner.next();
-				if (services.associateBadgeWithProc(pId, gId, badge)) {
-					System.out.println("Successfully associated");
-				} else System.out.println("Could not associate");
+				associateBadgeOptions(services, scanner);
 			}
 			case 6 -> {
 				chatOptions(services, scanner);
@@ -134,12 +120,53 @@ public class App
 			case 7 -> {
 			}
 			case 8 -> {
-				System.out.print("Player id: ");
-				int pId = scanner.nextInt();
-				System.out.print("Game id: ");
-				String gId = scanner.next();
-				System.out.print("Badge name: ");
-				String badge = scanner.next();
+				increaseBadgePointsOptions(services, scanner);
+			}
+		}
+	}
+
+	private static void increaseBadgePointsOptions(BLService services, Scanner scanner) {
+		System.out.println("1. with Optimisic locking");
+		System.out.println("2. with Pessismistic locking");
+		printPrompt();
+		int opt = scanner.nextInt();
+
+		//No point in asking more stuff, code is organized this way for efficiency and clarity
+		if (opt != 1 && opt !=2) return;
+
+		System.out.print("Badge name: ");
+		String badge = scanner.next();
+		System.out.print("Game id: ");
+		String gId = scanner.next();
+		switch (opt) {
+			case 1 -> services.increaseBadgePoints(badge, gId, true);
+			case 2 -> services.increaseBadgePoints(badge, gId, false);
+		}
+	}
+
+	private static void associateBadgeOptions(BLService services, Scanner scanner) {
+		System.out.println("1. With procedure");
+		System.out.println("2. Without procedure");
+		printPrompt();
+		int opt = scanner.nextInt();
+
+		//No point in asking more stuff, code is organized this way for efficiency and clarity
+		if (opt != 1 && opt !=2) return;
+
+		System.out.print("Player id: ");
+		int pId = scanner.nextInt();
+		System.out.print("Game id: ");
+		String gId = scanner.next();
+		System.out.print("Badge name: ");
+		String badge = scanner.next();
+
+		switch (opt) {
+			case 1 -> {
+				if (services.associateBadgeWithProc(pId, gId, badge)) {
+					System.out.println("Successfully associated");
+				} else System.out.println("Could not associate");
+			}
+			case 2 -> {
 				if (services.associateBadgeWithoutProc(pId, gId, badge)) {
 					System.out.println("Successfully associated");
 				} else System.out.println("Could not associate");

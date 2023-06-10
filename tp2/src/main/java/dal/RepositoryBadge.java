@@ -25,19 +25,27 @@ public class RepositoryBadge implements IRepository <Badge, BadgeId> {
 
     @Override
     public Badge find(BadgeId k) throws Exception {
+        return find(k, false);
+    }
+    public Badge find(BadgeId k, boolean optimisticLocking) throws Exception {
         MapperBadge m = new MapperBadge();
-
-        return m.read(k);
+        LockModeType lM = LockModeType.PESSIMISTIC_WRITE;
+        if(optimisticLocking) lM = LockModeType.OPTIMISTIC;
+        System.out.println("LOCKMODE : " + lM.name());
+        return m.read(k, lM);
     }
 
-
-    public Badge find(String bName, String gId) throws Exception {
+    public Badge find(String bName, String gId, boolean optimisticLocking) throws Exception {
         BadgeId id = new BadgeId();
 
         id.setGameId(gId);
         id.setBName(bName);
         System.out.println(gId + " " + bName);
-        return find(id);
+        return find(id, optimisticLocking);
+    }
+
+    public Badge find(String bName, String gId) throws Exception {
+        return find(bName, gId, false);
     }
 
     @Override
@@ -51,15 +59,21 @@ public class RepositoryBadge implements IRepository <Badge, BadgeId> {
     public void delete(Badge entity) throws Exception {
         MapperBadge m = new MapperBadge();
 
-        m.update(entity);
-
+        m.delete(entity);
     }
 
     @Override
     public void save(Badge e) throws Exception {
+        save(e, false);
+    }
+
+    public void save(Badge e, boolean optimisticLocking) throws Exception {
         MapperBadge m = new MapperBadge();
 
-        m.delete(e);
+        LockModeType lM = LockModeType.PESSIMISTIC_WRITE;
+        if(optimisticLocking) lM = LockModeType.OPTIMISTIC;
 
+        m.update(e, lM);
     }
+
 }

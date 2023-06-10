@@ -2,13 +2,14 @@ package model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.Version;
 
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 public class BadgeId implements Serializable {
-    private static final long serialVersionUID = -2039666677854841219L;
+
     @Column(name = "b_name", nullable = false, length = 20)
     private String bName;
 

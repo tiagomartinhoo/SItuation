@@ -111,15 +111,12 @@ public class App
 			case 4 -> {
 				System.out.print("Insert game id to obtain the total points for game per player: ");
 				String g_id = scanner.next();
-				//List<PLayerScoreTable> retList = services.totalPointsForGamePerPlayer(g_id);
+
 				List<Object[]> retList = services.totalPointsForGamePerPlayer(g_id);
 				System.out.println("Total points per player in the specific game");
 				System.out.println("--------------------------------------------");
 				System.out.println("Player | Score");
 
-			/*	for (PLayerScoreTable playerScoreTable : retList) {
-					System.out.println(playerScoreTable.getPlayerId() + " | " + playerScoreTable.getPlayerScore());
-				}*/
 				for (Object[] playerScoreTable : retList) {
 					System.out.println("  " + playerScoreTable[0] + "    |   " + playerScoreTable[1]);
 				}
@@ -129,7 +126,6 @@ public class App
 			}
 			case 6 -> {
 				chatOptions(services, scanner);
-
 			}
 			case 7 -> {
 			}
@@ -197,6 +193,15 @@ public class App
 			case 1 -> {
 			}
 			case 2 -> {
+				System.out.print("Player id:");
+				int pId = scanner.nextInt();
+				System.out.print("Chat id:");
+				int cId = scanner.nextInt();
+				if(services.joinChat(pId,cId)){
+					System.out.println("Player joined chat successfully");
+				}else{
+					System.out.println("Player has not able to join the chat");
+				}
 			}
 			case 3 -> {
 				System.out.print("Player id: ");

@@ -148,6 +148,18 @@ public class BLService
         return false;
     }
 
+    public boolean joinChat(int player_id, int chat_id) {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryChatLookUp repo = new RepositoryChatLookUp();
+
+            return repo.joinChat(player_id, chat_id);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+
     public void sendMessage(int pId, int cId, String msg) {
         try {
             MapperChatLookup clM = new MapperChatLookup();

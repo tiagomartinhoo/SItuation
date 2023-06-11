@@ -2,19 +2,70 @@ package dal;
 
 import jakarta.persistence.*;
 import model.Player;
-import org.eclipse.persistence.queries.StoredFunctionCall;
-import org.postgresql.core.NativeQuery;
 
 import java.util.List;
 
 public class RepositoryPlayer implements IRepository <Player, Integer> {
 
 
+    public boolean createPlayer(String email, String username, String activity_state, String region) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManagerFactory ef = ds.getEntityManagerFactory();
+            EntityManager em = ef.createEntityManager();
+            em.getTransaction().begin();
+
+            Query q = em.createNativeQuery("call criarJogador( ? , ? , ?, ? )");
+
+            q.setParameter(1, email)
+                    .setParameter(2, username)
+                    .setParameter(3, activity_state)
+                    .setParameter(4, region)
+                    .executeUpdate();
+            em.getTransaction().commit();
+            em.close();
+
+            return true;
+        }
+    }
+
+    public boolean banUser(int player_id) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManagerFactory ef = ds.getEntityManagerFactory();
+            EntityManager em = ef.createEntityManager();
+            em.getTransaction().begin();
+
+            Query q = em.createNativeQuery("call banirJogador( ? )");
+
+            q.setParameter(1, player_id)
+                    .executeUpdate();
+            em.getTransaction().commit();
+            em.close();
+
+            return true;
+        }
+    }
+
+    public boolean deactivateUser(int player_id) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManagerFactory ef = ds.getEntityManagerFactory();
+            EntityManager em = ef.createEntityManager();
+            em.getTransaction().begin();
+
+            Query q = em.createNativeQuery("call desativarJogador( ? )");
+
+            q.setParameter(1, player_id)
+                    .executeUpdate();
+            em.getTransaction().commit();
+            em.close();
+
+            return true;
+        }
+    }
     public int totalPlayerPoints(Integer id) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
-            // com queries o flush � feito automaticamente.
+            //em.flush();  //necessario para a proxima query encontrar os registos caso eles tenham sido criados neste transa��o
+            // com queries o flush e feito automaticamente.
             StoredProcedureQuery q = em.createStoredProcedureQuery("totalPontosJogador", Integer.class)
                     .registerStoredProcedureParameter(1, Integer.class, ParameterMode.OUT)
                     .registerStoredProcedureParameter(2, Integer.class, ParameterMode.IN);

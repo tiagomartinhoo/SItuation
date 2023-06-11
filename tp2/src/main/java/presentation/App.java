@@ -203,18 +203,33 @@ public class App
 		int opt = readOption(scanner);
 		switch (opt) {
 			case 1: {
-				//TODO: USER CREATION INPUTS
+				System.out.println("To create a player you need and email, username the activity state and the region he belongs to");
+				System.out.print("Insert the player email: ");
+				String email = scanner.next();
+				System.out.print("Insert the player username: ");
+				String username = scanner.next();
+				System.out.print("Insert the player activity state (Active, Inactive or Banned): ");
+				String activity_state = scanner.next();
+				System.out.print("Insert the player region: ");
+				String region = scanner.next();
+				if(services.createUser(email,username,activity_state,region)){
+					System.out.println("User Created successfully");
+				}else {
+					System.out.println("User was not created");
+				}
 				break;
 			}
 			case 2: {
 				System.out.print("Insert player id to ban: ");
 				int id = scanner.nextInt();
 				services.banUser(id);
+				break;
 			}
 			case 3: {
 				System.out.print("Insert player id to deactivate: ");
 				int id = scanner.nextInt();
 				services.deactivateUser(id);
+				break;
 			}
 			default: break;
 		}

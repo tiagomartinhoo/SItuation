@@ -13,12 +13,12 @@ acarretar problemas vários, em particular, no que respeita à consistência dos da
 
 package presentation;
 
+import java.util.List;
 import java.util.Scanner;
 
 import businessLogic.*;
 import dal.DataScope;
 import dal.IsolationLevel;
-
 
 
 /**
@@ -109,6 +109,20 @@ public class App
 			case 3 -> {
 			}
 			case 4 -> {
+				System.out.print("Insert game id to obtain the total points for game per player: ");
+				String g_id = scanner.next();
+				//List<PLayerScoreTable> retList = services.totalPointsForGamePerPlayer(g_id);
+				List<Object[]> retList = services.totalPointsForGamePerPlayer(g_id);
+				System.out.println("Total points per player in the specific game");
+				System.out.println("--------------------------------------------");
+				System.out.println("Player | Score");
+
+			/*	for (PLayerScoreTable playerScoreTable : retList) {
+					System.out.println(playerScoreTable.getPlayerId() + " | " + playerScoreTable.getPlayerScore());
+				}*/
+				for (Object[] playerScoreTable : retList) {
+					System.out.println("  " + playerScoreTable[0] + "    |   " + playerScoreTable[1]);
+				}
 			}
 			case 5 -> {
 				associateBadgeOptions(services, scanner);

@@ -2,13 +2,31 @@ package dal;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
-import model.Game;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 import model.PlayerScore;
 
 import java.util.List;
 
 // TODO: REMOVE IF NOT NEEDED
 public class RepositoryPlayerScore {
+
+
+    public List<Object[]> totalPointsForGamePerPlayer(String g_id) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManager em = ds.getEntityManager();
+
+            StoredProcedureQuery q = em.createStoredProcedureQuery("pontosJogoPorJogador")
+                    .registerStoredProcedureParameter(2, String.class, ParameterMode.IN);
+
+            q.setParameter(2, g_id).execute();
+
+            List<Object[]> result = q.getResultList();
+
+            ds.validateWork();
+            return result;
+        }
+    }
 
     public List<PlayerScore> getAllFrom(Integer k) throws Exception {
         try (DataScope ds = new DataScope()) {

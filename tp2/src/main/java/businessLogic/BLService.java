@@ -90,6 +90,19 @@ public class BLService
         }
     }
 
+    public List<Object[]> totalPointsForGamePerPlayer(String g_id) {
+        try {
+            RepositoryPlayerScore repo = new RepositoryPlayerScore();
+
+            return repo.totalPointsForGamePerPlayer(g_id);
+
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return null;
+    }
+
     public boolean associateBadgeWithProc(int pId, String gId, String badge) {
         try (DataScope ds = new DataScope()) {
 

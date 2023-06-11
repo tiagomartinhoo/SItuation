@@ -2,6 +2,7 @@ package dal;
 
 import jakarta.persistence.*;
 import model.Player;
+import model.PlayerScore;
 
 import java.util.List;
 

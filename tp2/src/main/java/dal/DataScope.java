@@ -15,9 +15,10 @@ package dal;
 
 
 import java.sql.Connection;
-import java.util.List;
 
 public class DataScope extends AbstractDataScope implements AutoCloseable {
+
+	private Integer pickedLevel = null;
 
 	public DataScope() {
 		super();
@@ -31,6 +32,14 @@ public class DataScope extends AbstractDataScope implements AutoCloseable {
 			throw  new Exception("Valor incorreto de nível de isolamento");
 		Connection cn = this.getEntityManager().unwrap(Connection.class);
 		cn.setTransactionIsolation(il);
+		pickedLevel = il;
 	}
 
+	@Override
+	public void resetTransaction() {
+		try {
+			super.resetTransaction();
+			setIsolationLevel(pickedLevel);
+		} catch(Exception ignored) {}
+	}
 }

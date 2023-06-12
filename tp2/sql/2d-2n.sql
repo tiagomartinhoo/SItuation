@@ -54,6 +54,30 @@ BEGIN
 	END IF;
 END;$$;
 
+CREATE OR REPLACE FUNCTION check_badge_exists_in_game(game TEXT, badge_name TEXT)
+    RETURNS VOID
+	LANGUAGE plpgsql
+AS $$
+BEGIN
+	PERFORM FROM badge WHERE b_name = badge_name AND game_id = game;
+	IF NOT FOUND THEN
+		RAISE EXCEPTION 'Badge with name % not found in game %.', badge_name, game
+			USING ERRCODE = '20000';
+	END IF;
+END;$$;
+
+CREATE OR REPLACE FUNCTION check_region_exists(region_name VARCHAR)
+	RETURNS VOID
+	LANGUAGE plpgsql
+AS $$
+BEGIN
+	PERFORM FROM region WHERE r_name = region_name;
+	IF NOT FOUND THEN
+		RAISE EXCEPTION 'Region with name % not found.', region_name
+			USING ERRCODE = '20000';
+	END IF;
+END;$$;
+
 CREATE OR REPLACE FUNCTION check_game_exists(g_id VARCHAR)
 	RETURNS VOID
 	LANGUAGE plpgsql
@@ -126,6 +150,7 @@ CREATE OR REPLACE PROCEDURE criarJogador(
 	AS $$
 BEGIN
     PERFORM check_player_duplicate(p_email, p_username);
+    PERFORM check_region_exists(p_region_name);
 
 	INSERT INTO player(email, username, activity_state, region_name)
 		VALUES(p_email, p_username, p_activity_state, p_region_name);
@@ -236,6 +261,7 @@ DECLARE
 BEGIN
 	PERFORM check_player_exists(p_id);
 	PERFORM check_game_exists(g_id);
+	PERFORM check_badge_exists_in_game(g_id, badge);
 	PERFORM check_player_has_badge(p_id, g_id, badge);
 
 	-- Obtain user points in the game

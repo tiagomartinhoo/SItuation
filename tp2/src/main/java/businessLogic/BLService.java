@@ -15,9 +15,11 @@ package businessLogic;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import dal.*;
 import model.*;
+import utils.IOUtils;
 import utils.ServiceWrapper;
 
 public class BLService 
@@ -39,12 +41,21 @@ public class BLService
 
     }
 
-    public Boolean createUser(String email, String username, String activity_state, String region){
+    public Boolean createUser(String email, String username, String region){
+        if (!Pattern.matches(IOUtils.EMAIL_REGEX, email)) {
+            IOUtils.printResult("Email format invalid.");
+            return null;
+        }
+        if (username.length() > 20) {
+            IOUtils.printResult("Username must be between 1 and 20 characters.");
+            return null;
+        }
+
         return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryPlayer repo = new RepositoryPlayer();
 
-            return repo.createPlayer(email, username, activity_state, region);
+            return repo.createPlayer(email, username, "Active", region);
         });
     }
 
@@ -159,8 +170,8 @@ public class BLService
         });
     }
 
-    public void sendMessage(int pId, int cId, String msg) {
-        ServiceWrapper.runAndCatch((arg) -> {
+    public Boolean sendMessage(int pId, int cId, String msg) {
+        return ServiceWrapper.runAndCatch((arg) -> {
             MapperChatLookup clM = new MapperChatLookup();
             ChatLookupId clId = new ChatLookupId();
             clId.setChatId(cId);
@@ -173,7 +184,7 @@ public class BLService
             RepositoryPlayer repo = new RepositoryPlayer();
 
             repo.sendMessage(pId, cId, msg);
-            return null;
+            return true;
         });
     }
 

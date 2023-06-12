@@ -20,7 +20,10 @@ import businessLogic.*;
 import dal.DataScope;
 import dal.IsolationLevel;
 import model.JogadorTotalInfo;
+import utils.IOUtils;
 import utils.TablePrinter;
+
+import static utils.IOUtils.*;
 
 public class App 
 {
@@ -35,7 +38,11 @@ public class App
 			pickTransLevel(ds);
 			while (true) {
 				printCommands();
-				int opt = readOption(new Scanner(System.in));
+				Integer opt = readOption(new Scanner(System.in));
+				if (opt == null || opt > 9) {
+					System.out.println("Invalid command.");
+					continue;
+				}
 				if (opt == 9) break;
 				option(opt, services);
 				System.in.read();
@@ -53,13 +60,14 @@ public class App
 		System.out.println("4. SERIALIZABLE");
 		System.out.println("Any: default");
 		printPrompt();
-		int opt = readOption(new Scanner(System.in));
-		switch (opt) {
-			case 1 -> ds.setIsolationLevel(IsolationLevel.READ_UNCOMMITED);
-			case 2 -> ds.setIsolationLevel(IsolationLevel.READ_COMMITED);
-			case 3 -> ds.setIsolationLevel(IsolationLevel.REPEATABLE_READ);
-			case 4 -> ds.setIsolationLevel(IsolationLevel.SERIALIZABLE);
-		}
+		Integer opt = readOption(new Scanner(System.in));
+		if (opt != null)
+			switch (opt) {
+				case 1 -> ds.setIsolationLevel(IsolationLevel.READ_UNCOMMITED);
+				case 2 -> ds.setIsolationLevel(IsolationLevel.READ_COMMITED);
+				case 3 -> ds.setIsolationLevel(IsolationLevel.REPEATABLE_READ);
+				case 4 -> ds.setIsolationLevel(IsolationLevel.SERIALIZABLE);
+			}
 	}
 
 	private static void confirmTransaction(DataScope ds) {
@@ -94,24 +102,38 @@ public class App
 			case 1 -> playerOptions(services, scanner);
 			case 2 -> {
 				System.out.print("\nInsert player id to obtain points: ");
-				int id = scanner.nextInt();
-				Integer p = services.totalUserPoints(id);
-				if (p != null)
-					System.out.println("\nPlayer with id: " + id + " has a total of " + p + " points");
+				Integer id = IOUtils.nextIntOrNull(scanner);
+				if (id == null || id <= 0) {
+					System.out.println("Invalid id.");
+					break;
+				}
+
+				Integer points = services.totalUserPoints(id);
+				if (points != null)
+					printResult("Player with id: " + id + " has a total of " + points + " points");
 			}
 			case 3 -> {
 				System.out.print("\nInsert player id to obtain games: ");
-				int id = scanner.nextInt();
+				Integer id = IOUtils.nextIntOrNull(scanner);
+				if (id == null || id <= 0) {
+					System.out.println("Invalid player id.");
+					break;
+				}
+
 				Integer games = services.totalUserGames(id);
 				if (games != null)
-					System.out.println("\nPlayer with id: " + id + " has a total of " + games + " games");
+					printResult("Player with id: " + id + " has a total of " + games + " games");
 			}
 			case 4 -> {
 				System.out.print("Insert game id to obtain the total points for game per player: ");
 				String g_id = scanner.next();
+				if (g_id.length() != 10) {
+					System.out.println("Invalid id.");
+					break;
+				}
 
 				List<Object[]> retList = services.totalPointsForGamePerPlayer(g_id);
-				System.out.println("Total points per player in the specific game");
+				printResult("Total points per player in the specific game");
 				System.out.println("--------------------------------------------");
 				System.out.println("Player | Score");
 
@@ -127,8 +149,8 @@ public class App
 			}
 			case 7 -> {
 				List<JogadorTotalInfo> list = services.totalUserInfo();
-				clearConsole();
-				System.out.println("\nTotal info per player");
+
+				printResult("Total info per player");
 				System.out.println("------------------------------------------------------------------------------------------");
 
 				TablePrinter.printTable(list);
@@ -143,15 +165,19 @@ public class App
 		System.out.println("1. with Optimisic locking");
 		System.out.println("2. with Pessismistic locking");
 		printPrompt();
-		int opt = scanner.nextInt();
 
-		//No point in asking more stuff, code is organized this way for efficiency and clarity
-		if (opt != 1 && opt !=2) return;
+		Integer opt = readOption(scanner);
+		if (opt == null || opt > 2) {
+			System.out.println("Invalid command.");
+			return;
+		}
 
 		System.out.print("Badge name: ");
 		String badge = scanner.next();
+
 		System.out.print("Game id: ");
 		String gId = scanner.next();
+
 		switch (opt) {
 			case 1 -> services.increaseBadgePoints(badge, gId, true);
 			case 2 -> services.increaseBadgePoints(badge, gId, false);
@@ -159,31 +185,47 @@ public class App
 	}
 
 	private static void associateBadgeOptions(BLService services, Scanner scanner) {
-		System.out.println("1. With procedure");
+		System.out.println("\n1. With procedure");
 		System.out.println("2. Without procedure");
 		printPrompt();
-		int opt = scanner.nextInt();
 
-		//No point in asking more stuff, code is organized this way for efficiency and clarity
-		if (opt != 1 && opt !=2) return;
+		Integer opt = readOption(scanner);
+		if (opt == null || opt > 2) {
+			System.out.println("Invalid command.");
+			return;
+		}
 
 		System.out.print("Player id: ");
-		int pId = scanner.nextInt();
+		Integer pId = IOUtils.nextIntOrNull(scanner);
+		if (pId == null || pId <= 0) {
+			System.out.println("Invalid player id.");
+			return;
+		}
+
 		System.out.print("Game id: ");
 		String gId = scanner.next();
+		if (gId.length() != 10) {
+			System.out.println("Invalid game id.");
+			return;
+		}
+
 		System.out.print("Badge name: ");
 		String badge = scanner.next();
+		if (badge.length() > 20) {
+			System.out.println("Invalid badge name.");
+			return;
+		}
 
 		switch (opt) {
 			case 1 -> {
-				if (services.associateBadgeWithProc(pId, gId, badge)) {
-					System.out.println("Successfully associated");
-				} else System.out.println("Could not associate");
+				Boolean associated = services.associateBadgeWithProc(pId, gId, badge);
+				if (associated != null)
+					printResult("Successfully associated");
 			}
 			case 2 -> {
-				if (services.associateBadgeWithoutProc(pId, gId, badge)) {
-					System.out.println("Successfully associated");
-				} else System.out.println("Could not associate");
+				Boolean associated = services.associateBadgeWithoutProc(pId, gId, badge);
+				if (associated != null)
+					printResult("Successfully associated");
 			}
 		}
 	}
@@ -192,95 +234,126 @@ public class App
 		System.out.println("1. Iniciar Conversa");
 		System.out.println("2. Juntar a uma Conversa");
 		System.out.println("3. Enviar mensagem para uma Conversa");
-		int opt = readOption(scanner);
+		printPrompt();
+
+		Integer opt = readOption(scanner);
+		if (opt == null || opt > 3) {
+			System.out.println("Invalid command.");
+			return;
+		}
+
+		System.out.print("Player id:");
+		Integer pId = IOUtils.nextIntOrNull(scanner);
+		if (pId == null || pId <= 0) {
+			System.out.println("Invalid player id.");
+			return;
+		}
+
 		switch (opt) {
 			case 1 -> {
-				System.out.print("Player id:");
-				int pId = scanner.nextInt();
 				System.out.print("Chat name:");
 				String cName = scanner.next();
-				if(services.createChat(pId, cName) >= 0){
-					System.out.println("Player started chat successfully");
-				}else{
-					System.out.println("Player has not able to join the chat");
+				if (cName.length() > 20) {
+					System.out.println("Invalid chat name.");
+					return;
 				}
+
+				Integer created = services.createChat(pId, cName);
+				if(created != null)
+					printResult("Player started chat successfully with id " + created);
 			}
 			case 2 -> {
-				System.out.print("Player id:");
-				int pId = scanner.nextInt();
-				System.out.print("Chat id:");
-				int cId = scanner.nextInt();
-				if(services.joinChat(pId,cId)){
-					System.out.println("Player joined chat successfully");
-				}else{
-					System.out.println("Player has not able to join the chat");
+				System.out.print("Chat id: ");
+				Integer cId = IOUtils.nextIntOrNull(scanner);
+				if (cId == null || cId <= 0) {
+					System.out.println("Invalid player id.");
+					return;
 				}
+
+				Boolean joined = services.joinChat(pId, cId);
+				if (joined != null)
+					printResult("Player joined chat successfully");
 			}
 			case 3 -> {
-				System.out.print("Player id: ");
-				int pId = scanner.nextInt();
 				System.out.print("Chat id: ");
-				int cId = scanner.nextInt();
+				Integer cId = IOUtils.nextIntOrNull(scanner);
+				if (cId == null || cId <= 0) {
+					System.out.println("Invalid player id.");
+					return;
+				}
+
 				System.out.print("Message: ");
 				String msg = scanner.next();
-				services.sendMessage(pId, cId, msg);
+
+				Boolean sent = services.sendMessage(pId, cId, msg);
+				if (sent != null)
+					printResult("Message sent successfully.");
 			}
 		}
 	}
 
 	private static void playerOptions(BLService services, Scanner scanner) {
-		System.out.println("1. Create a player");
+		System.out.println("\n1. Create a player");
 		System.out.println("2. Ban player");
 		System.out.println("3. Deactivate player");
-		int opt = readOption(scanner);
+		printPrompt();
+
+		Integer opt = readOption(scanner);
+		if (opt == null || opt > 3) {
+			System.out.println("Invalid command.");
+			return;
+		}
+
 		switch (opt) {
 			case 1: {
-				System.out.println("To create a player you need and email, username the activity state and the region he belongs to");
+				System.out.println("\nTo create a player you need and email, username the activity state and the region he belongs to");
+
 				System.out.print("Insert the player email: ");
 				String email = scanner.next();
 				System.out.print("Insert the player username: ");
 				String username = scanner.next();
-				System.out.print("Insert the player activity state (Active, Inactive or Banned): ");
-				String activity_state = scanner.next();
 				System.out.print("Insert the player region: ");
 				String region = scanner.next();
-				if(services.createUser(email,username,activity_state,region)){
-					System.out.println("User Created successfully");
-				}else {
-					System.out.println("User was not created");
-				}
+
+				Boolean userCreated = services.createUser(email,username,region);
+				if (userCreated != null)
+					printResult("User created successfully.");
 				break;
 			}
 			case 2: {
 				System.out.print("Insert player id to ban: ");
-				int id = scanner.nextInt();
-				services.banUser(id);
+				Integer id = IOUtils.nextIntOrNull(scanner);
+				if (id == null || id <= 0) {
+					System.out.println("Invalid player id.");
+					break;
+				}
+
+				Boolean userBanned = services.banUser(id);
+				if (userBanned != null)
+					printResult("User " + id + " banned successfully.");
 				break;
 			}
 			case 3: {
 				System.out.print("Insert player id to deactivate: ");
-				int id = scanner.nextInt();
-				services.deactivateUser(id);
+				Integer id = IOUtils.nextIntOrNull(scanner);
+				if (id == null || id <= 0) {
+					System.out.println("Invalid player id.");
+					break;
+				}
+
+				Boolean userDeactivated = services.deactivateUser(id);
+				if (userDeactivated != null)
+					printResult("User " + id + " deactivated successfully.");
 				break;
 			}
 			default: break;
 		}
 	}
 
-	/**
-	 * Cleans the console after performing the operation.
-	 */
-	private static void clearConsole() {
-		for (int y = 0; y < 5; y++) // console is 80 columns and 25 lines
-			System.out.println("\n");
-	}
-
-	public static int readOption(Scanner scanner) {
-		return scanner.nextInt();
-	}
-
-	public static void printPrompt() {
-		System.out.print("> ");
+	public static Integer readOption(Scanner scanner) {
+		Integer cmd = IOUtils.nextIntOrNull(scanner);
+		if (cmd == null || cmd <= 0) return null;
+		return cmd;
 	}
 }
 

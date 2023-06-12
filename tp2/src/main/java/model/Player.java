@@ -19,7 +19,7 @@ public class Player {
     @Column(name = "username", nullable = false, length = 20)
     private String username;
 
-    @Column(name = "activity_state", length = 100)
+    @Column(name = "activity_state", length = 10)
     private String activityState;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

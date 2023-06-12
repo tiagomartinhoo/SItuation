@@ -10,7 +10,7 @@ BEGIN
         id              SERIAL PRIMARY KEY,
         email           VARCHAR(50) UNIQUE NOT NULL,
         username        VARCHAR(20) UNIQUE NOT NULL,
-        activity_state  VARCHAR(100),
+        activity_state  VARCHAR(10),
         region_name     VARCHAR(20) NOT NULL,
 
         FOREIGN KEY(region_name) REFERENCES region (r_name),

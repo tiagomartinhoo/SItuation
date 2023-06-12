@@ -72,10 +72,10 @@ BEGIN
         (4, 2, 'bbbbbbbbb1', 1)
     ;
     
-    INSERT INTO badge(b_name, game_id, points_limit, url)
-        VALUES('Win-Streak', 'abcdefghi8', 5, 'https://www.winStreak.com'),
-        ('Win-Streak', 'bbbbbbbbb1', 5, 'https://www.winStreak.com'),
-		('test', 'abcdefghi8', 1, 'https://www.test.org')
+    INSERT INTO badge(b_name, game_id, points_limit, url, version)
+        VALUES('Win-Streak', 'abcdefghi8', 5, 'https://www.winStreak.com', 1),
+        ('Win-Streak', 'bbbbbbbbb1', 5, 'https://www.winStreak.com', 1),
+		('test', 'abcdefghi8', 1, 'https://www.test.org', 1)
     ;
 
 	INSERT INTO player_badge(player_id, b_name, game_id)

@@ -23,74 +23,78 @@ import java.util.Collections;
 import java.util.HashMap;
 
 public abstract class AbstractDataScope implements AutoCloseable {
-	
+
 	protected class Session {
 		private EntityManagerFactory ef;//deveria ser um singleton
 		private EntityManager em;
 		private boolean ok = true;
-	
+
 	}
-	
+
 	boolean isMine = true;
 	boolean voted = false;
-	
+
 	private static final ThreadLocal<Session> threadLocal = ThreadLocal.withInitial(() -> null);
-	
-	
+
+
 	public AbstractDataScope() {
 		if (threadLocal.get()==null) {
 			// Replaced Manager Factory with one with support for Environmental variables
 			EntityManagerFactory emf = EnvironmentalEntityManagerFactory.createEntityManagerFactory("JPAEx");
 			EntityManager em = emf.createEntityManager();
-	    	Session s = new Session();
-	    	s.ef = emf;
-	    	s.ok = true;
-	    	s.em = em;
+			Session s = new Session();
+			s.ef = emf;
+			s.ok = true;
+			s.em = em;
 			threadLocal.set(s);
 			em.getTransaction().begin();
 			isMine = true;
-		}
-		else
+		} else
 			isMine = false;
 	}
-	
-	
 
 	//Para podermos usar diretamente JPA
 	public EntityManager getEntityManager() {return threadLocal.get().em;}
 
 	public EntityManagerFactory getEntityManagerFactory() {return threadLocal.get().ef;}
 
-	@Override
-	public void close() throws Exception {
-		// TODO Auto-generated method stub
-		if (isMine) {
-			if(threadLocal.get().ok && voted)  {
-				threadLocal.get().em.getTransaction().commit();
-		   	}
-	       	else {
-				threadLocal.get().em.getTransaction().rollback();
-		   	}
-			threadLocal.get().em.close();
-			threadLocal.get().ef.close();
-			threadLocal.remove();
-		//ou:
-		//threadLocal.set(null);
+	public void resetTransaction() {
+		try {
+			Session session = threadLocal.get();
+			session.em.getTransaction().rollback();
+			session.em.close();
+			session.em = session.ef.createEntityManager();
+		} catch (Exception ignored) {}
+	}
+
+		@Override
+		public void close() throws Exception {
+			// TODO Auto-generated method stub
+			if (isMine) {
+				if(threadLocal.get().ok && voted)  {
+					threadLocal.get().em.getTransaction().commit();
+				} else {
+					threadLocal.get().em.getTransaction().rollback();
+				}
+				threadLocal.get().em.close();
+				threadLocal.get().ef.close();
+				threadLocal.remove();
+				//ou:
+				//threadLocal.set(null);
+			} else if (!voted)
+				cancelWork();
+
 		}
-		else if (!voted)
-			cancelWork();
-			  
-   }
-		
-	
-	public void validateWork() {
-	  	  voted = true;
-	}
-	
-	public void cancelWork() {
-		threadLocal.get().ok = false;
-		voted = true;
-	}
+
+
+		public void validateWork() {
+			voted = true;
+		}
+
+		public void cancelWork() {
+			threadLocal.get().ok = false;
+			voted = true;
+		}
 
 
 

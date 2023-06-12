@@ -37,7 +37,7 @@ public class MapperPlayer implements IMapper <Player, Integer>  {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
             em.flush();  // É necessário para o próximo find encontrar o registo caso ele tenha sido criado neste transação
-            Player p1 = em.find(Player.class, e.getId(), LockModeType.WRITE);
+            Player p1 = em.find(Player.class, e.getId(), LockModeType.PESSIMISTIC_WRITE);
             if(p1 == null)
                 throw new java.lang.IllegalAccessException("Entidade inexistente");
 

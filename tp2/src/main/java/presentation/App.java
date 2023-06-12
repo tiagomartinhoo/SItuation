@@ -22,16 +22,8 @@ import dal.IsolationLevel;
 import model.JogadorTotalInfo;
 import utils.TablePrinter;
 
-
-/**
- * Hello world!
- *
- */
-
 public class App 
 {
-	
-
 	public static void main( String[] args ) throws Exception {
 		start();
    	}
@@ -46,6 +38,7 @@ public class App
 				int opt = readOption(new Scanner(System.in));
 				if (opt == 9) break;
 				option(opt, services);
+				System.in.read();
 			}
 			confirmTransaction(ds);
 		} catch (Exception ex) {
@@ -77,24 +70,21 @@ public class App
 
 		if(opt.equalsIgnoreCase("Y"))
 			ds.validateWork();  // Set work as valid, which means it commits on main DataScope instance close
-		else {
+		else
 			ds.cancelWork(); // Likewise cancelWork makes it rollback
-		}
-
 	}
 
 	public static void printCommands() {
 		System.out.println("\nCommands:");
-		System.out.println("1.Create/Ban/Deactivate player"); //d
-		System.out.println("2.Get total points for player"); //e
-		System.out.println("3.Get amount of games played for player"); //f
-		System.out.println("4.Get total points for game per player");//g
-		System.out.println("5.Associate badge");//h
-		System.out.println("6.Chat options");//i, j, k
-		System.out.println("7.Get total player info");//l
-		System.out.println("8.Increase badge points by 20%");
-//        System.out.println("8.Send message in chat");//
-		System.out.println("9.Exit");
+		System.out.println("1. Create/Ban/Deactivate player"); //d
+		System.out.println("2. Get total points for player"); //e
+		System.out.println("3. Get amount of games played for player"); //f
+		System.out.println("4. Get total points for game per player");//g
+		System.out.println("5. Associate badge");//h
+		System.out.println("6. Chat options");//i, j, k
+		System.out.println("7. Get total player info");//l
+		System.out.println("8. Increase badge points by 20%");
+		System.out.println("9. Exit");
 		printPrompt();
 	}
 
@@ -105,15 +95,15 @@ public class App
 			case 2 -> {
 				System.out.print("\nInsert player id to obtain points: ");
 				int id = scanner.nextInt();
-				int p = services.totalUserPoints(id);
-				if (p >= 0)
+				Integer p = services.totalUserPoints(id);
+				if (p != null)
 					System.out.println("\nPlayer with id: " + id + " has a total of " + p + " points");
 			}
 			case 3 -> {
 				System.out.print("\nInsert player id to obtain games: ");
 				int id = scanner.nextInt();
-				int games = services.totalUserGames(id);
-				if (games >= 0)
+				Integer games = services.totalUserGames(id);
+				if (games != null)
 					System.out.println("\nPlayer with id: " + id + " has a total of " + games + " games");
 			}
 			case 4 -> {
@@ -137,7 +127,7 @@ public class App
 			}
 			case 7 -> {
 				List<JogadorTotalInfo> list = services.totalUserInfo();
-
+				clearConsole();
 				System.out.println("\nTotal info per player");
 				System.out.println("------------------------------------------------------------------------------------------");
 
@@ -277,6 +267,13 @@ public class App
 		}
 	}
 
+	/**
+	 * Cleans the console after performing the operation.
+	 */
+	private static void clearConsole() {
+		for (int y = 0; y < 5; y++) // console is 80 columns and 25 lines
+			System.out.println("\n");
+	}
 
 	public static int readOption(Scanner scanner) {
 		return scanner.nextInt();

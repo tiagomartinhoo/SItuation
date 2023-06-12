@@ -15,18 +15,13 @@ package businessLogic;
 
 import java.util.Collections;
 import java.util.List;
-import dal.*;
-import jakarta.persistence.*;
-import model.*;
-import org.postgresql.util.PSQLException;
 
-/**
- * Hello world!
- *
- */
+import dal.*;
+import model.*;
+import utils.ServiceWrapper;
+
 public class BLService 
 {
-    //@SuppressWarnings("unchecked")
 	public void test1() {
 
         try (DataScope ds = new DataScope()) { // Automatically calls DataScope.close() so no need to manage that
@@ -44,122 +39,80 @@ public class BLService
 
     }
 
-    public boolean createUser(String email, String username, String activity_state, String region){
-        try (DataScope ds = new DataScope()) {
+    public Boolean createUser(String email, String username, String activity_state, String region){
+        return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryPlayer repo = new RepositoryPlayer();
 
             return repo.createPlayer(email, username, activity_state, region);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
+        });
     }
-    public boolean banUser(int p_id) {
-        try (DataScope ds = new DataScope()) {
+
+    public Boolean banUser(int p_id) {
+        return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryPlayer repo = new RepositoryPlayer();
 
             return repo.banUser(p_id);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
+        });
     }
 
-    public boolean deactivateUser(int p_id) {
-        try (DataScope ds = new DataScope()) {
+    public Boolean deactivateUser(int p_id) {
+        return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryPlayer repo = new RepositoryPlayer();
 
             return repo.deactivateUser(p_id);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
+        });
     }
 
-    public int totalUserPoints(int id) {
-        try (DataScope ds = new DataScope()) {
+    public Integer totalUserPoints(int id) {
+        return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryPlayer repo = new RepositoryPlayer();
 
             return repo.totalPlayerPoints(id);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            return -1;
-        }
+        });
     }
 
-    public int totalUserGames(int id) {
-        try {
+    public Integer totalUserGames(int id) {
+        return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryPlayer repo = new RepositoryPlayer();
 
-            int games = repo.totalPlayerGames(id);
-
-            if (games == -1) {
-                System.out.println("Couldn't find specified user");
-                return -1;
-            }
-            else
-                return games;
-        }
-        catch (PersistenceException pe) {
-            Throwable cause = pe.getCause().getCause();
-            if (cause instanceof PSQLException sqlException) {
-                // Lidar com a PSQLException
-                String e = sqlException.getLocalizedMessage();
-                System.out.println(e);
-            } else {
-                pe.printStackTrace();
-            }
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-        return -1;
+            return repo.totalPlayerGames(id);
+        });
     }
 
     public List<JogadorTotalInfo> totalUserInfo() {
-        try (DataScope ds = new DataScope()) {
+        return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryPlayer repo = new RepositoryPlayer();
 
             return repo.getAllTotalInfo();
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            return Collections.emptyList();
-        }
+        });
     }
 
     public List<Object[]> totalPointsForGamePerPlayer(String g_id) {
-        try {
+        return ServiceWrapper.runAndCatch((arg) -> {
+
             RepositoryPlayerScore repo = new RepositoryPlayerScore();
 
             return repo.totalPointsForGamePerPlayer(g_id);
-
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-
-        return null;
+        });
     }
 
-    public boolean associateBadgeWithProc(int pId, String gId, String badge) {
-        try (DataScope ds = new DataScope()) {
+    public Boolean associateBadgeWithProc(int pId, String gId, String badge) {
+        return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryPlayer repo = new RepositoryPlayer();
 
             return repo.associateBadge(pId, gId, badge);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
+        });
     }
 
-    public boolean associateBadgeWithoutProc(int pId, String gId, String badge) {
-        try {
+    public Boolean associateBadgeWithoutProc(int pId, String gId, String badge) {
+        return ServiceWrapper.runAndCatch((arg) -> {
             RepositoryBadge badgeRepo = new RepositoryBadge();
 
             Badge b = badgeRepo.find(badge, gId); //Obtain badge information
@@ -185,38 +138,29 @@ public class BLService
 
             repo.add(pId, gId, badge);
             return true;
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-        return false;
+        });
     }
 
-    public int createChat(int player_id, String chat_name) {
-        try (DataScope ds = new DataScope()) {
+    public Integer createChat(int player_id, String chat_name) {
+        return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryChatLookUp repo = new RepositoryChatLookUp();
 
             return repo.createChat(player_id, chat_name);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            return -1;
-        }
+        });
     }
 
-    public boolean joinChat(int player_id, int chat_id) {
-        try (DataScope ds = new DataScope()) {
+    public Boolean joinChat(int player_id, int chat_id) {
+        return ServiceWrapper.runAndCatch((arg) -> {
 
             RepositoryChatLookUp repo = new RepositoryChatLookUp();
 
             return repo.joinChat(player_id, chat_id);
-        } catch(Exception e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
+        });
     }
 
     public void sendMessage(int pId, int cId, String msg) {
-        try {
+        ServiceWrapper.runAndCatch((arg) -> {
             MapperChatLookup clM = new MapperChatLookup();
             ChatLookupId clId = new ChatLookupId();
             clId.setChatId(cId);
@@ -229,12 +173,8 @@ public class BLService
             RepositoryPlayer repo = new RepositoryPlayer();
 
             repo.sendMessage(pId, cId, msg);
-
-        } catch (IllegalAccessException ex) {
-            System.out.println("User does not have access to that chat");
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+            return null;
+        });
     }
 
     public void increaseBadgePoints(String badge, String gId) {
@@ -242,13 +182,13 @@ public class BLService
     }
 
     public void increaseBadgePoints(String bName, String gId, boolean optimisticLocking) {
-        try {
+        ServiceWrapper.runAndCatch((arg) -> {
             RepositoryBadge repo = new RepositoryBadge();
 
             Badge badge = repo.find(bName, gId, optimisticLocking);
             if(badge == null) {
                 System.out.println("Could not find specified badge");
-                return;
+                return null;
             }
             int orig = badge.getPointsLimit();
             System.out.println("OLD VALUE: " + orig);
@@ -257,9 +197,8 @@ public class BLService
 
             badge.setPointsLimit(newValue);
             repo.save(badge, optimisticLocking);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-
+            return null;
+        });
     }
+
 }

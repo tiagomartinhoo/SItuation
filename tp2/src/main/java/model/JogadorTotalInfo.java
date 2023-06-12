@@ -1,16 +1,14 @@
 package model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 /**
  * Mapping for DB view
  */
 @Entity
 @Table(name = "jogadortotalinfo")
-public class Jogadortotalinfo {
+@NamedQuery(name = "JogadorTotalInfo.findAll", query="SELECT p FROM JogadorTotalInfo p")
+public class JogadorTotalInfo {
     @Id
     @Column(name = "id")
     private Integer id;

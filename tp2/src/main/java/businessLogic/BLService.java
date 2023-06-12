@@ -1,26 +1,24 @@
 /*
  Walter Vieira (2022-04-22)
- Sistemas de Informação - projeto JPAAulas_ex1
- Código desenvolvido para iulustração dos conceitos sobre acesso a dados, concretizados com base na especificação JPA.
- Todos os exemplos foram desenvolvidos com EclipseLinlk (3.1.0-M1), usando o ambientre Eclipse IDE versão 2022-03 (4.23.0).
+ Sistemas de Informaï¿½ï¿½o - projeto JPAAulas_ex1
+ Cï¿½digo desenvolvido para iulustraï¿½ï¿½o dos conceitos sobre acesso a dados, concretizados com base na especificaï¿½ï¿½o JPA.
+ Todos os exemplos foram desenvolvidos com EclipseLinlk (3.1.0-M1), usando o ambientre Eclipse IDE versï¿½o 2022-03 (4.23.0).
  
-Não existe a pretensão de que o código estaja completo.
+Nï¿½o existe a pretensï¿½o de que o cï¿½digo estaja completo.
 
-Embora tenha sido colocado um esforço significativo na correção do código, não há garantias de que ele não contenha erros que possam 
-acarretar problemas vários, em particular, no que respeita à consistência dos dados.  
+Embora tenha sido colocado um esforï¿½o significativo na correï¿½ï¿½o do cï¿½digo, nï¿½o hï¿½ garantias de que ele nï¿½o contenha erros que possam 
+acarretar problemas vï¿½rios, em particular, no que respeita ï¿½ consistï¿½ncia dos dados.  
  
 */
 
 package businessLogic;
 
+import java.util.Collections;
 import java.util.List;
-
 import dal.*;
 import jakarta.persistence.*;
-
-import entityManagerFactory.EnvironmentalEntityManagerFactory;
 import model.*;
-import org.glassfish.jaxb.core.v2.TODO;
+import org.postgresql.util.PSQLException;
 
 /**
  * Hello world!
@@ -46,12 +44,39 @@ public class BLService
 
     }
 
-    public void banUser(int id) {
-        //TODO
+    public boolean createUser(String email, String username, String activity_state, String region){
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            return repo.createPlayer(email, username, activity_state, region);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+    }
+    public boolean banUser(int p_id) {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            return repo.banUser(p_id);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
     }
 
-    public void deactivateUser(int id) {
-        //TODO
+    public boolean deactivateUser(int p_id) {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            return repo.deactivateUser(p_id);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
     }
 
     public int totalUserPoints(int id) {
@@ -64,6 +89,61 @@ public class BLService
             System.out.println(e.getMessage());
             return -1;
         }
+    }
+
+    public int totalUserGames(int id) {
+        try {
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            int games = repo.totalPlayerGames(id);
+
+            if (games == -1) {
+                System.out.println("Couldn't find specified user");
+                return -1;
+            }
+            else
+                return games;
+        }
+        catch (PersistenceException pe) {
+            Throwable cause = pe.getCause().getCause();
+            if (cause instanceof PSQLException sqlException) {
+                // Lidar com a PSQLException
+                String e = sqlException.getLocalizedMessage();
+                System.out.println(e);
+            } else {
+                pe.printStackTrace();
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public List<JogadorTotalInfo> totalUserInfo() {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            return repo.getAllTotalInfo();
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    public List<Object[]> totalPointsForGamePerPlayer(String g_id) {
+        try {
+            RepositoryPlayerScore repo = new RepositoryPlayerScore();
+
+            return repo.totalPointsForGamePerPlayer(g_id);
+
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+
+        return null;
     }
 
     public boolean associateBadgeWithProc(int pId, String gId, String badge) {
@@ -109,6 +189,30 @@ public class BLService
             System.out.println(e.getMessage());
         }
         return false;
+    }
+
+    public int createChat(int player_id, String chat_name) {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryChatLookUp repo = new RepositoryChatLookUp();
+
+            return repo.createChat(player_id, chat_name);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
+    }
+
+    public boolean joinChat(int player_id, int chat_id) {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryChatLookUp repo = new RepositoryChatLookUp();
+
+            return repo.joinChat(player_id, chat_id);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
     }
 
     public void sendMessage(int pId, int cId, String msg) {

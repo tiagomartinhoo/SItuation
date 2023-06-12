@@ -1,18 +1,71 @@
 package dal;
 
 import jakarta.persistence.*;
+import model.JogadorTotalInfo;
 import model.Player;
-
 import java.util.List;
 
 public class RepositoryPlayer implements IRepository <Player, Integer> {
 
 
+    public boolean createPlayer(String email, String username, String activity_state, String region) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManagerFactory ef = ds.getEntityManagerFactory();
+            EntityManager em = ef.createEntityManager();
+            em.getTransaction().begin();
+
+            Query q = em.createNativeQuery("call criarJogador( ? , ? , ?, ? )");
+
+            q.setParameter(1, email)
+                    .setParameter(2, username)
+                    .setParameter(3, activity_state)
+                    .setParameter(4, region)
+                    .executeUpdate();
+            em.getTransaction().commit();
+            em.close();
+
+            return true;
+        }
+    }
+
+    public boolean banUser(int player_id) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManagerFactory ef = ds.getEntityManagerFactory();
+            EntityManager em = ef.createEntityManager();
+            em.getTransaction().begin();
+
+            Query q = em.createNativeQuery("call banirJogador( ? )");
+
+            q.setParameter(1, player_id)
+                    .executeUpdate();
+            em.getTransaction().commit();
+            em.close();
+
+            return true;
+        }
+    }
+
+    public boolean deactivateUser(int player_id) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManagerFactory ef = ds.getEntityManagerFactory();
+            EntityManager em = ef.createEntityManager();
+            em.getTransaction().begin();
+
+            Query q = em.createNativeQuery("call desativarJogador( ? )");
+
+            q.setParameter(1, player_id)
+                    .executeUpdate();
+            em.getTransaction().commit();
+            em.close();
+
+            return true;
+        }
+    }
     public int totalPlayerPoints(Integer id) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
-            // com queries o flush � feito automaticamente.
+            //em.flush();  //necessario para a proxima query encontrar os registos caso eles tenham sido criados neste transa��o
+            // com queries o flush e feito automaticamente.
             StoredProcedureQuery q = em.createStoredProcedureQuery("totalPontosJogador", Integer.class)
                     .registerStoredProcedureParameter(1, Integer.class, ParameterMode.OUT)
                     .registerStoredProcedureParameter(2, Integer.class, ParameterMode.IN);
@@ -44,8 +97,34 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
             ds.validateWork();
             return points;
         }
+    }
 
+    public int totalPlayerGames(Integer id) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManager em = ds.getEntityManager();
 
+            StoredProcedureQuery q = em.createStoredProcedureQuery("totalJogosJogador", Integer.class)
+                    .registerStoredProcedureParameter(1, Integer.class, ParameterMode.OUT)
+                    .registerStoredProcedureParameter(2, Integer.class, ParameterMode.IN);
+
+            q.setParameter(2, id).execute();
+            Integer games = (Integer) q.getOutputParameterValue(1);
+
+            ds.validateWork();
+            return games;
+        }
+    }
+
+    public  List<JogadorTotalInfo> getAllTotalInfo() throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManager em = ds.getEntityManager();
+            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
+            // com queries o flush � feito automaticamente.
+            List<JogadorTotalInfo> l = em.createNamedQuery("JogadorTotalInfo.findAll", JogadorTotalInfo.class)
+                    .getResultList();
+            ds.validateWork();
+            return l;
+        }
     }
 
     public Player find(Integer Id) throws Exception {
@@ -62,7 +141,7 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
             EntityManager em = ds.getEntityManager();
             //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
             // com queries o flush � feito automaticamente.
-            List<Player> l = em.createNamedQuery("Game.findAll", Player.class)
+            List<Player> l = em.createNamedQuery("Player.findAll", Player.class)
                     .setLockMode(LockModeType.PESSIMISTIC_READ)
                     .getResultList();
             ds.validateWork();

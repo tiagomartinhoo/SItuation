@@ -13,6 +13,7 @@ public class ServiceWrapper {
 
     public static <T, R, E extends Exception> R runAndCatch(ThrowingConsumer<T, R, E> function) {
         try (DataScope ds = new DataScope()) {
+            ds.validateWork();
             return function.apply(null);
         }
         catch (PersistenceException pe) {

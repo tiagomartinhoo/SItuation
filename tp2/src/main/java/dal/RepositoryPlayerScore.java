@@ -8,7 +8,6 @@ import model.PlayerScore;
 
 import java.util.List;
 
-// TODO: REMOVE IF NOT NEEDED
 public class RepositoryPlayerScore {
 
 

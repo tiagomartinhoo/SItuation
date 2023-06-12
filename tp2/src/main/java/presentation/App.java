@@ -1,16 +1,3 @@
-/*
- Walter Vieira (2022-04-22)
- Sistemas de Informação - projeto JPAAulas_ex3
- Código desenvolvido para iulustração dos conceitos sobre acesso a dados, concretizados com base na especificação JPA.
- Todos os exemplos foram desenvolvidos com EclipseLinlk (3.1.0-M1), usando o ambientre Eclipse IDE versão 2022-03 (4.23.0).
- 
-Não existe a pretensão de que o código estaja completo.
-
-Embora tenha sido colocado um esforço significativo na correção do código, não há garantias de que ele não contenha erros que possam 
-acarretar problemas vários, em particular, no que respeita à consistência dos dados.  
- 
-*/
-
 package presentation;
 
 import java.util.List;
@@ -90,7 +77,7 @@ public class App
 		System.out.println("4. Get total points for game per player");//g
 		System.out.println("5. Associate badge");//h
 		System.out.println("6. Chat options");//i, j, k
-		System.out.println("7. Get total player info");//l
+		System.out.println("7. Get total players info");//l
 		System.out.println("8. Increase badge points by 20%");
 		System.out.println("9. Exit");
 		printPrompt();
@@ -162,7 +149,7 @@ public class App
 	}
 
 	private static void increaseBadgePointsOptions(BLService services, Scanner scanner) {
-		System.out.println("1. with Optimisic locking");
+		System.out.println("\n1. with Optimisic locking");
 		System.out.println("2. with Pessismistic locking");
 		printPrompt();
 
@@ -231,7 +218,7 @@ public class App
 	}
 
 	private static void chatOptions(BLService services, Scanner scanner) {
-		System.out.println("1. Iniciar Conversa");
+		System.out.println("\n1. Iniciar Conversa");
 		System.out.println("2. Juntar a uma Conversa");
 		System.out.println("3. Enviar mensagem para uma Conversa");
 		printPrompt();
@@ -242,7 +229,7 @@ public class App
 			return;
 		}
 
-		System.out.print("Player id:");
+		System.out.print("Player id: ");
 		Integer pId = IOUtils.nextIntOrNull(scanner);
 		if (pId == null || pId <= 0) {
 			System.out.println("Invalid player id.");
@@ -251,7 +238,7 @@ public class App
 
 		switch (opt) {
 			case 1 -> {
-				System.out.print("Chat name:");
+				System.out.print("Chat name: ");
 				String cName = scanner.next();
 				if (cName.length() > 20) {
 					System.out.println("Invalid chat name.");
@@ -266,7 +253,7 @@ public class App
 				System.out.print("Chat id: ");
 				Integer cId = IOUtils.nextIntOrNull(scanner);
 				if (cId == null || cId <= 0) {
-					System.out.println("Invalid player id.");
+					System.out.println("Invalid chat id.");
 					return;
 				}
 
@@ -309,11 +296,12 @@ public class App
 				System.out.println("\nTo create a player you need and email, username the activity state and the region he belongs to");
 
 				System.out.print("Insert the player email: ");
-				String email = scanner.next();
+				scanner.nextLine();
+				String email = scanner.nextLine();
 				System.out.print("Insert the player username: ");
-				String username = scanner.next();
+				String username = scanner.nextLine();
 				System.out.print("Insert the player region: ");
-				String region = scanner.next();
+				String region = scanner.nextLine();
 
 				Boolean userCreated = services.createUser(email,username,region);
 				if (userCreated != null)

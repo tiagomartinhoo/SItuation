@@ -19,7 +19,7 @@ public class MapperGame implements IMapper <Game, String> {
     public Game read(String id) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
+            em.flush();  // É necessário para o próximo find encontrar o registo caso ele tenha sido criado neste transação
 
             Game g = em.find(Game.class, id, LockModeType.PESSIMISTIC_READ);
             ds.validateWork();

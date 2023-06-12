@@ -13,8 +13,6 @@ public class RepositoryBadge implements IRepository <Badge, BadgeId> {
     public List<Badge> getAll() throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
-            // com queries o flush � feito automaticamente.
             List<Badge> l = em.createNamedQuery("Badge.findAll", Badge.class)
                     .setLockMode(LockModeType.PESSIMISTIC_READ)
                     .getResultList();

@@ -29,7 +29,7 @@ public class MapperBadge  implements IMapper <Badge, BadgeId> {
     public Badge read(BadgeId k, LockModeType lockMode) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
+            em.flush();
             Badge b = em.find(Badge.class, k, lockMode);
             ds.validateWork();
             return b;

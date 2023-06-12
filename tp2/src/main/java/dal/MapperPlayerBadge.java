@@ -27,7 +27,7 @@ public class MapperPlayerBadge implements IMapper <PlayerBadge, PlayerBadgeId>  
     public PlayerBadge read(PlayerBadgeId id) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
+            em.flush();  // É necessário para o próximo find encontrar o registo caso ele tenha sido criado neste transação
             PlayerBadge p = em.find(PlayerBadge.class, id, LockModeType.PESSIMISTIC_WRITE);
             ds.validateWork();
             return p;

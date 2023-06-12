@@ -23,7 +23,7 @@ public class MapperPlayerScore implements IMapper<PlayerScore, PlayerScoreId> {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
 
-            em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
+            em.flush();  // É necessário para o próximo find encontrar o registo caso ele tenha sido criado neste transação
             PlayerScore s = em.find(PlayerScore.class, k, LockModeType.PESSIMISTIC_READ);
             ds.validateWork();
             return s;

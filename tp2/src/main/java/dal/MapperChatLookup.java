@@ -21,7 +21,7 @@ public class MapperChatLookup implements IMapper<ChatLookup, ChatLookupId> {
     public ChatLookup read(ChatLookupId k) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            em.flush();  // � necess�rio para o pr�ximo find encontrar o registo caso ele tenha sido criado neste transa��o
+            em.flush();  // É necessário para o próximo find encontrar o registo caso ele tenha sido criado neste transação
             ChatLookup cl = em.find(ChatLookup.class, k, LockModeType.PESSIMISTIC_WRITE);
             ds.validateWork();
             return cl;

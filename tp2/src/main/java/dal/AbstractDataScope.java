@@ -64,6 +64,9 @@ public abstract class AbstractDataScope implements AutoCloseable {
 			session.em.getTransaction().rollback();
 			session.em.close();
 			session.em = session.ef.createEntityManager();
+			session.em.getTransaction().begin();
+			session.ok = true;
+			voted = true;
 		} catch (Exception ignored) {}
 	}
 

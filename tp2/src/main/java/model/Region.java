@@ -19,6 +19,4 @@ public class Region {
     public void setId(String id) {
         this.id = id;
     }
-
-    //TODO [JPA Buddy] generate columns from DB
 }

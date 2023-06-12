@@ -64,16 +64,14 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
     public int totalPlayerPoints(Integer id) throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            //em.flush();  //necessario para a proxima query encontrar os registos caso eles tenham sido criados neste transa��o
-            // com queries o flush e feito automaticamente.
             StoredProcedureQuery q = em.createStoredProcedureQuery("totalPontosJogador", Integer.class)
                     .registerStoredProcedureParameter(1, Integer.class, ParameterMode.OUT)
                     .registerStoredProcedureParameter(2, Integer.class, ParameterMode.IN);
 
             q.setParameter(2, id).execute();
             Integer points = (Integer) q.getOutputParameterValue(1);
-//            int points = (Integer) em.createNativeQuery("SELECT * FROM totalPontosJogador(" + id +")", Player.class)
-//                    .getSingleResult();
+
+            if (points == null) points = 0;
 
             ds.validateWork();
             return points;
@@ -84,8 +82,6 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
 
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
-            // com queries o flush � feito automaticamente.
             Query q = em.createQuery("SELECT SUM(p.score) FROM PlayerScore p" +
                     " WHERE p.id.playerId = ?1 AND p.id.matchId.gameId = ?2", Integer.class);
 
@@ -118,8 +114,6 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
     public  List<JogadorTotalInfo> getAllTotalInfo() throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
-            // com queries o flush � feito automaticamente.
             List<JogadorTotalInfo> l = em.createNamedQuery("JogadorTotalInfo.findAll", JogadorTotalInfo.class)
                     .getResultList();
             ds.validateWork();
@@ -133,14 +127,9 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
         return m.read(Id);
     }
 
-
-    //Nota: optou-se por usar pessimistic locking  nas leituras
-    //      Poderia fazer sentido ter uma versão das laituras com optimistic locking
     public  List<Player> getAll() throws Exception {
         try (DataScope ds = new DataScope()) {
             EntityManager em = ds.getEntityManager();
-            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
-            // com queries o flush � feito automaticamente.
             List<Player> l = em.createNamedQuery("Player.findAll", Player.class)
                     .setLockMode(LockModeType.PESSIMISTIC_READ)
                     .getResultList();
@@ -149,14 +138,11 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
         }
     }
 
-
     public void add(Player a) throws Exception {
         MapperPlayer m = new MapperPlayer();
 
         m.create(a);
     }
-
-
 
     public void save(Player a) throws Exception {
         MapperPlayer m = new MapperPlayer();

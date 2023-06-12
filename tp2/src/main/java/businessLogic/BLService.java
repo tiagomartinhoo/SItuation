@@ -13,11 +13,12 @@ acarretar problemas v�rios, em particular, no que respeita � consist�ncia 
 
 package businessLogic;
 
+import java.util.Collections;
 import java.util.List;
-
 import dal.*;
-
+import jakarta.persistence.*;
 import model.*;
+import org.postgresql.util.PSQLException;
 
 /**
  * Hello world!
@@ -90,6 +91,48 @@ public class BLService
         }
     }
 
+    public int totalUserGames(int id) {
+        try {
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            int games = repo.totalPlayerGames(id);
+
+            if (games == -1) {
+                System.out.println("Couldn't find specified user");
+                return -1;
+            }
+            else
+                return games;
+        }
+        catch (PersistenceException pe) {
+            Throwable cause = pe.getCause().getCause();
+            if (cause instanceof PSQLException sqlException) {
+                // Lidar com a PSQLException
+                String e = sqlException.getLocalizedMessage();
+                System.out.println(e);
+            } else {
+                pe.printStackTrace();
+            }
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public List<JogadorTotalInfo> totalUserInfo() {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryPlayer repo = new RepositoryPlayer();
+
+            return repo.getAllTotalInfo();
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
     public List<Object[]> totalPointsForGamePerPlayer(String g_id) {
         try {
             RepositoryPlayerScore repo = new RepositoryPlayerScore();
@@ -146,6 +189,18 @@ public class BLService
             System.out.println(e.getMessage());
         }
         return false;
+    }
+
+    public int createChat(int player_id, String chat_name) {
+        try (DataScope ds = new DataScope()) {
+
+            RepositoryChatLookUp repo = new RepositoryChatLookUp();
+
+            return repo.createChat(player_id, chat_name);
+        } catch(Exception e) {
+            System.out.println(e.getMessage());
+            return -1;
+        }
     }
 
     public boolean joinChat(int player_id, int chat_id) {

@@ -19,6 +19,8 @@ import java.util.Scanner;
 import businessLogic.*;
 import dal.DataScope;
 import dal.IsolationLevel;
+import model.JogadorTotalInfo;
+import utils.TablePrinter;
 
 
 /**
@@ -52,7 +54,7 @@ public class App
 	}
 
 	private static void pickTransLevel(DataScope ds) throws Exception {
-		System.out.println("1. READ_UNCOMMITED");
+		System.out.println("\n1. READ_UNCOMMITED");
 		System.out.println("2. READ_COMMITED");
 		System.out.println("3. REPEATABLE_READ");
 		System.out.println("4. SERIALIZABLE");
@@ -90,7 +92,7 @@ public class App
 		System.out.println("5.Associate badge");//h
 		System.out.println("6.Chat options");//i, j, k
 		System.out.println("7.Get total player info");//l
-		System.out.println("8. Increase badge points by 20%");
+		System.out.println("8.Increase badge points by 20%");
 //        System.out.println("8.Send message in chat");//
 		System.out.println("9.Exit");
 		printPrompt();
@@ -101,12 +103,18 @@ public class App
 		switch (number) {
 			case 1 -> playerOptions(services, scanner);
 			case 2 -> {
-				System.out.print("Insert player id to obtain points: ");
+				System.out.print("\nInsert player id to obtain points: ");
 				int id = scanner.nextInt();
 				int p = services.totalUserPoints(id);
-				System.out.println("Player with id: " + id + " has a total of " + p + " points");
+				if (p >= 0)
+					System.out.println("\nPlayer with id: " + id + " has a total of " + p + " points");
 			}
 			case 3 -> {
+				System.out.print("\nInsert player id to obtain games: ");
+				int id = scanner.nextInt();
+				int games = services.totalUserGames(id);
+				if (games >= 0)
+					System.out.println("\nPlayer with id: " + id + " has a total of " + games + " games");
 			}
 			case 4 -> {
 				System.out.print("Insert game id to obtain the total points for game per player: ");
@@ -128,6 +136,12 @@ public class App
 				chatOptions(services, scanner);
 			}
 			case 7 -> {
+				List<JogadorTotalInfo> list = services.totalUserInfo();
+
+				System.out.println("\nTotal info per player");
+				System.out.println("------------------------------------------------------------------------------------------");
+
+				TablePrinter.printTable(list);
 			}
 			case 8 -> {
 				increaseBadgePointsOptions(services, scanner);
@@ -191,6 +205,15 @@ public class App
 		int opt = readOption(scanner);
 		switch (opt) {
 			case 1 -> {
+				System.out.print("Player id:");
+				int pId = scanner.nextInt();
+				System.out.print("Chat name:");
+				String cName = scanner.next();
+				if(services.createChat(pId, cName) >= 0){
+					System.out.println("Player started chat successfully");
+				}else{
+					System.out.println("Player has not able to join the chat");
+				}
 			}
 			case 2 -> {
 				System.out.print("Player id:");
@@ -260,7 +283,7 @@ public class App
 	}
 
 	public static void printPrompt() {
-		System.out.print(">");
+		System.out.print("> ");
 	}
 }
 

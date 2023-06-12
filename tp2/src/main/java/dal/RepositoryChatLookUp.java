@@ -1,13 +1,13 @@
 package dal;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Query;
+import jakarta.persistence.*;
 import model.ChatLookup;
 import model.ChatLookupId;
 import model.Game;
 
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.Types;
 import java.util.List;
 
 public class RepositoryChatLookUp implements IRepository <ChatLookup, ChatLookupId> {
@@ -47,6 +47,26 @@ public class RepositoryChatLookUp implements IRepository <ChatLookup, ChatLookup
 
 
         m.delete(a);;
+    }
+
+    public int createChat(int player_id, String chat_name) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManager em = ds.getEntityManager();
+
+            Connection cn = em.unwrap(Connection.class);
+
+            CallableStatement f = cn.prepareCall("call iniciarconversa(?,?,?)");
+
+            f.registerOutParameter(3, Types.INTEGER);
+            f.setInt(1, player_id);
+            f.setString(2, chat_name);
+            f.execute();
+
+            em.getTransaction().commit();
+            em.close();
+
+            return f.getInt(3);
+        }
     }
 
 

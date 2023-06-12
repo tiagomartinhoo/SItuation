@@ -1,9 +1,8 @@
 package dal;
 
 import jakarta.persistence.*;
+import model.JogadorTotalInfo;
 import model.Player;
-import model.PlayerScore;
-
 import java.util.List;
 
 public class RepositoryPlayer implements IRepository <Player, Integer> {
@@ -98,8 +97,34 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
             ds.validateWork();
             return points;
         }
+    }
 
+    public int totalPlayerGames(Integer id) throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManager em = ds.getEntityManager();
 
+            StoredProcedureQuery q = em.createStoredProcedureQuery("totalJogosJogador", Integer.class)
+                    .registerStoredProcedureParameter(1, Integer.class, ParameterMode.OUT)
+                    .registerStoredProcedureParameter(2, Integer.class, ParameterMode.IN);
+
+            q.setParameter(2, id).execute();
+            Integer games = (Integer) q.getOutputParameterValue(1);
+
+            ds.validateWork();
+            return games;
+        }
+    }
+
+    public  List<JogadorTotalInfo> getAllTotalInfo() throws Exception {
+        try (DataScope ds = new DataScope()) {
+            EntityManager em = ds.getEntityManager();
+            //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
+            // com queries o flush � feito automaticamente.
+            List<JogadorTotalInfo> l = em.createNamedQuery("JogadorTotalInfo.findAll", JogadorTotalInfo.class)
+                    .getResultList();
+            ds.validateWork();
+            return l;
+        }
     }
 
     public Player find(Integer Id) throws Exception {
@@ -116,7 +141,7 @@ public class RepositoryPlayer implements IRepository <Player, Integer> {
             EntityManager em = ds.getEntityManager();
             //em.flush();  // � necess�rio para a pr�xima query encontrar os registos caso eles tenham sido criados neste transa��o
             // com queries o flush � feito automaticamente.
-            List<Player> l = em.createNamedQuery("Game.findAll", Player.class)
+            List<Player> l = em.createNamedQuery("Player.findAll", Player.class)
                     .setLockMode(LockModeType.PESSIMISTIC_READ)
                     .getResultList();
             ds.validateWork();

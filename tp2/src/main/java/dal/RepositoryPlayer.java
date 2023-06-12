@@ -2,8 +2,6 @@ package dal;
 
 import jakarta.persistence.*;
 import model.Player;
-import org.eclipse.persistence.queries.StoredFunctionCall;
-import org.postgresql.core.NativeQuery;
 
 import java.util.List;
 

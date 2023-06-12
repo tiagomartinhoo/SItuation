@@ -149,7 +149,7 @@ public class BLService
             int orig = badge.getPointsLimit();
             System.out.println("OLD VALUE: " + orig);
             int newValue = Math.round(orig * 1.2f);
-            System.out.println("NEW VALUE: " + orig * 1.2f);
+            System.out.println("NEW VALUE: " + newValue);
 
             badge.setPointsLimit(newValue);
             repo.save(badge, optimisticLocking);
